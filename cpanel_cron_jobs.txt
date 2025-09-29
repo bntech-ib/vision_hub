@@ -1,0 +1,13 @@
+# cPanel Cron Jobs for VisionHub
+
+# Laravel Scheduler (runs every minute)
+* * * * * cd /home/yourusername/public_html && php artisan schedule:run >> /dev/null 2>&1
+
+# Queue Worker (process background jobs)
+* * * * * cd /home/yourusername/public_html && php artisan queue:work --once --quiet
+
+# Daily backup (at 2 AM)
+0 2 * * * cd /home/yourusername/public_html && php artisan backup:run
+
+# Weekly log cleanup (at 3 AM on Sundays)
+0 3 * * 0 cd /home/yourusername/public_html && php artisan log:clear

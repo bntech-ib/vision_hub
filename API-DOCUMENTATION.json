@@ -1,0 +1,1441 @@
+{
+  "apiVersion": "1.0",
+  "lastUpdated": "2025-09-04",
+  "baseUrl": "http://localhost:8000/api/v1",
+  "endpoints": {
+    "public": {
+      "status": {
+        "method": "GET",
+        "path": "/status",
+        "description": "Get API status",
+        "successResponse": {
+          "success": true,
+          "data": {
+            "status": "ok",
+            "timestamp": "2025-09-04T10:00:00.000000Z",
+            "version": "1.0"
+          },
+          "message": "API is running"
+        },
+        "errorResponses": [
+          {
+            "status": 500,
+            "response": {
+              "success": false,
+              "message": "Service unavailable",
+              "error": "Service is currently unavailable"
+            }
+          }
+        ]
+      },
+      "info": {
+        "method": "GET",
+        "path": "/info",
+        "description": "Get API information",
+        "successResponse": {
+          "success": true,
+          "data": {
+            "name": "VisionHub API",
+            "version": "1.0",
+            "description": "API for VisionHub platform"
+          },
+          "message": "API information retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 500,
+            "response": {
+              "success": false,
+              "message": "Failed to retrieve API information",
+              "error": "Internal server error"
+            }
+          }
+        ]
+      },
+      "health": {
+        "method": "GET",
+        "path": "/health",
+        "description": "Get API health status",
+        "successResponse": {
+          "success": true,
+          "data": {
+            "status": "healthy",
+            "database": "connected",
+            "cache": "available"
+          },
+          "message": "System is healthy"
+        },
+        "errorResponses": [
+          {
+            "status": 503,
+            "response": {
+              "success": false,
+              "message": "System is unhealthy",
+              "error": "Database connection failed"
+            }
+          }
+        ]
+      },
+      "maintenance": {
+        "method": "GET",
+        "path": "/maintenance",
+        "description": "Get system maintenance status",
+        "successResponse": {
+          "success": true,
+          "data": {
+            "is_maintenance": false,
+            "message": "System is operational",
+            "timestamp": "2025-09-04T10:00:00.000000Z"
+          },
+          "message": "Maintenance status retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 500,
+            "response": {
+              "success": false,
+              "message": "Failed to retrieve maintenance status",
+              "error": "Internal server error"
+            }
+          }
+        ]
+      },
+      "fileTypes": {
+        "method": "GET",
+        "path": "/file-types",
+        "description": "Get supported file types",
+        "successResponse": {
+          "success": true,
+          "data": {
+            "fileTypes": [
+              "jpg",
+              "jpeg",
+              "png",
+              "gif",
+              "bmp",
+              "tiff",
+              "webp"
+            ]
+          },
+          "message": "File types retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 500,
+            "response": {
+              "success": false,
+              "message": "Failed to retrieve file types",
+              "error": "Internal server error"
+            }
+          }
+        ]
+      },
+      "authRegister": {
+        "method": "POST",
+        "path": "/auth/register",
+        "description": "Register a new user",
+        "requestBody": {
+          "fullName": "string",
+          "username": "string",
+          "email": "string",
+          "password": "string",
+          "confirmPassword": "string",
+          "accessKey": "string",
+          "country": "string (optional)",
+          "phone": "string (optional)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "1",
+              "username": "johndoe",
+              "email": "john@example.com",
+              "fullName": "John Doe",
+              "phone": "+1234567890",
+              "country": "USA",
+              "package": {
+                "id": "1",
+                "name": "Basic Plan",
+                "price": 9.99,
+                "benefits": [
+                  "Up to 10 projects",
+                  "Basic analytics",
+                  "Email support"
+                ],
+                "duration": 30
+              },
+              "referralCode": "ABC123",
+              "referralStats": {
+                "level1Count": 5,
+                "level2Count": 3,
+                "level3Count": 2,
+                "totalCount": 10
+              },
+              "referralEarnings": {
+                "level1Earnings": 500.00,
+                "level2Earnings": 150.00,
+                "level3Earnings": 50.00,
+                "totalEarnings": 700.00
+              },
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "updatedAt": "2025-09-04T10:00:00.000000Z"
+            },
+            "token": "1|abcdefghijk1234567890"
+          },
+          "message": "Registration successful! Welcome to VisionHub!"
+        },
+        "errorResponses": [
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "email": [
+                  "The email has already been taken."
+                ]
+              }
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "accessKey": [
+                  "The access key is invalid or has already been used."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "authLogin": {
+        "method": "POST",
+        "path": "/auth/login",
+        "description": "Login user with email and password",
+        "requestBody": {
+          "email": "string",
+          "password": "string"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "1",
+              "username": "johndoe",
+              "email": "john@example.com",
+              "fullName": "John Doe",
+              "phone": "+1234567890",
+              "country": "USA",
+              "package": {
+                "id": "1",
+                "name": "Basic Plan",
+                "price": 9.99,
+                "benefits": [
+                  "Up to 10 projects",
+                  "Basic analytics",
+                  "Email support"
+                ],
+                "duration": 30
+              },
+              "referralCode": "ABC123",
+              "referralStats": {
+                "level1Count": 5,
+                "level2Count": 3,
+                "level3Count": 2,
+                "totalCount": 10
+              },
+              "referralEarnings": {
+                "level1Earnings": 500.00,
+                "level2Earnings": 150.00,
+                "level3Earnings": 50.00,
+                "totalEarnings": 700.00
+              },
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "updatedAt": "2025-09-04T10:00:00.000000Z"
+            },
+            "token": "1|abcdefghijk1234567890"
+          },
+          "message": "Login successful"
+        },
+        "errorResponses": [
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "email": [
+                  "The provided credentials are incorrect."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "authLoginEmail": {
+        "method": "POST",
+        "path": "/auth/login/email",
+        "description": "Login user with email and password (alternative endpoint)",
+        "requestBody": {
+          "email": "string",
+          "password": "string"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "1",
+              "username": "johndoe",
+              "email": "john@example.com",
+              "fullName": "John Doe",
+              "phone": "+1234567890",
+              "country": "USA",
+              "package": {
+                "id": "1",
+                "name": "Basic Plan",
+                "price": 9.99,
+                "benefits": [
+                  "Up to 10 projects",
+                  "Basic analytics",
+                  "Email support"
+                ],
+                "duration": 30
+              },
+              "referralCode": "ABC123",
+              "referralStats": {
+                "level1Count": 5,
+                "level2Count": 3,
+                "level3Count": 2,
+                "totalCount": 10
+              },
+              "referralEarnings": {
+                "level1Earnings": 500.00,
+                "level2Earnings": 150.00,
+                "level3Earnings": 50.00,
+                "totalEarnings": 700.00
+              },
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "updatedAt": "2025-09-04T10:00:00.000000Z"
+            },
+            "token": "1|abcdefghijk1234567890"
+          },
+          "message": "Login successful"
+        },
+        "errorResponses": [
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "email": [
+                  "The provided credentials are incorrect."
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "protected": {
+      "authUser": {
+        "method": "GET",
+        "path": "/auth/user",
+        "description": "Get authenticated user details",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "1",
+              "username": "johndoe",
+              "email": "john@example.com",
+              "fullName": "John Doe",
+              "phone": "+1234567890",
+              "country": "USA",
+              "package": {
+                "id": "1",
+                "name": "Basic Plan",
+                "price": 9.99,
+                "benefits": [
+                  "Up to 10 projects",
+                  "Basic analytics",
+                  "Email support"
+                ],
+                "duration": 30
+              },
+              "referralCode": "ABC123",
+              "referralStats": {
+                "level1Count": 5,
+                "level2Count": 3,
+                "level3Count": 2,
+                "totalCount": 10
+              },
+              "referralEarnings": {
+                "level1Earnings": 500.00,
+                "level2Earnings": 150.00,
+                "level3Earnings": 50.00,
+                "totalEarnings": 700.00
+              },
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "updatedAt": "2025-09-04T10:00:00.000000Z"
+            }
+          },
+          "message": "User details retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "authLogout": {
+        "method": "POST",
+        "path": "/auth/logout",
+        "description": "Logout current user session",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "message": "Logged out successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "authLogoutAll": {
+        "method": "POST",
+        "path": "/auth/logout-all",
+        "description": "Logout all user sessions",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "message": "Logged out from all devices successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "authUpdateProfile": {
+        "method": "PUT",
+        "path": "/auth/profile",
+        "description": "Update user profile",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "requestBody": {
+          "fullName": "string",
+          "username": "string",
+          "email": "string",
+          "phone": "string (optional)",
+          "country": "string (optional)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "1",
+              "username": "johndoe",
+              "email": "john@example.com",
+              "fullName": "John Doe",
+              "phone": "+1234567890",
+              "country": "USA",
+              "package": {
+                "id": "1",
+                "name": "Basic Plan",
+                "price": 9.99,
+                "benefits": [
+                  "Up to 10 projects",
+                  "Basic analytics",
+                  "Email support"
+                ],
+                "duration": 30
+              },
+              "referralCode": "ABC123",
+              "referralStats": {
+                "level1Count": 5,
+                "level2Count": 3,
+                "level3Count": 2,
+                "totalCount": 10
+              },
+              "referralEarnings": {
+                "level1Earnings": 500.00,
+                "level2Earnings": 150.00,
+                "level3Earnings": 50.00,
+                "totalEarnings": 700.00
+              },
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "updatedAt": "2025-09-04T10:00:00.000000Z"
+            }
+          },
+          "message": "Profile updated successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "email": [
+                  "The email has already been taken."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "authChangePassword": {
+        "method": "PUT",
+        "path": "/auth/change-password",
+        "description": "Change user password",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "requestBody": {
+          "currentPassword": "string",
+          "newPassword": "string",
+          "confirmPassword": "string"
+        },
+        "successResponse": {
+          "success": true,
+          "message": "Password changed successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "currentPassword": [
+                  "The provided password is incorrect."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "authTokens": {
+        "method": "GET",
+        "path": "/auth/tokens",
+        "description": "Get user's API tokens",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "tokens": [
+              {
+                "id": "1",
+                "name": "auth-token",
+                "abilities": [
+                  "*"
+                ],
+                "lastUsedAt": "2025-09-04T10:00:00.000000Z",
+                "createdAt": "2025-09-04T10:00:00.000000Z"
+              }
+            ]
+          },
+          "message": "Tokens retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "authCreateToken": {
+        "method": "POST",
+        "path": "/auth/tokens",
+        "description": "Create a new API token",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "requestBody": {
+          "name": "string",
+          "abilities": "array (optional)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "token": "1|abcdefghijk1234567890"
+          },
+          "message": "Token created successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "name": [
+                  "The name field is required."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "authRevokeToken": {
+        "method": "DELETE",
+        "path": "/auth/tokens",
+        "description": "Revoke current API token",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "message": "Token revoked successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "projectsIndex": {
+        "method": "GET",
+        "path": "/projects",
+        "description": "Get all projects for authenticated user",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "queryParams": {
+          "page": "integer (optional)",
+          "limit": "integer (optional)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "projects": [
+              {
+                "id": "1",
+                "name": "My First Project",
+                "description": "Description of my first project",
+                "status": "active",
+                "settings": {
+                  "autoTag": true,
+                  "quality": "high"
+                },
+                "userId": "1",
+                "createdAt": "2025-09-04T10:00:00.000000Z",
+                "updatedAt": "2025-09-04T10:00:00.000000Z"
+              }
+            ],
+            "pagination": {
+              "currentPage": 1,
+              "lastPage": 1,
+              "perPage": 10,
+              "total": 1
+            }
+          },
+          "message": "Projects retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "projectsStore": {
+        "method": "POST",
+        "path": "/projects",
+        "description": "Create a new project",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "requestBody": {
+          "name": "string",
+          "description": "string",
+          "status": "string (optional)",
+          "settings": "object (optional)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "project": {
+              "id": "1",
+              "name": "My First Project",
+              "description": "Description of my first project",
+              "status": "active",
+              "settings": {
+                "autoTag": true,
+                "quality": "high"
+              },
+              "userId": "1",
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "updatedAt": "2025-09-04T10:00:00.000000Z"
+            }
+          },
+          "message": "Project created successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "name": [
+                  "The name field is required."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "projectsShow": {
+        "method": "GET",
+        "path": "/projects/{id}",
+        "description": "Get a specific project",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "project": {
+              "id": "1",
+              "name": "My First Project",
+              "description": "Description of my first project",
+              "status": "active",
+              "settings": {
+                "autoTag": true,
+                "quality": "high"
+              },
+              "userId": "1",
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "updatedAt": "2025-09-04T10:00:00.000000Z"
+            }
+          },
+          "message": "Project retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 404,
+            "response": {
+              "success": false,
+              "message": "Project not found"
+            }
+          }
+        ]
+      },
+      "projectsUpdate": {
+        "method": "PUT",
+        "path": "/projects/{id}",
+        "description": "Update a specific project",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "requestBody": {
+          "name": "string",
+          "description": "string",
+          "status": "string (optional)",
+          "settings": "object (optional)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "project": {
+              "id": "1",
+              "name": "My Updated Project",
+              "description": "Updated description of my project",
+              "status": "active",
+              "settings": {
+                "autoTag": true,
+                "quality": "high"
+              },
+              "userId": "1",
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "updatedAt": "2025-09-04T10:00:00.000000Z"
+            }
+          },
+          "message": "Project updated successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 404,
+            "response": {
+              "success": false,
+              "message": "Project not found"
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "name": [
+                  "The name field is required."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "projectsDestroy": {
+        "method": "DELETE",
+        "path": "/projects/{id}",
+        "description": "Delete a specific project",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "message": "Project deleted successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 404,
+            "response": {
+              "success": false,
+              "message": "Project not found"
+            }
+          }
+        ]
+      },
+      "projectsStats": {
+        "method": "GET",
+        "path": "/projects/{project}/stats",
+        "description": "Get project statistics",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "stats": {
+              "totalImages": 10,
+              "totalJobs": 5,
+              "processingTime": 1200,
+              "storageUsed": 5000000
+            }
+          },
+          "message": "Project statistics retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 404,
+            "response": {
+              "success": false,
+              "message": "Project not found"
+            }
+          }
+        ]
+      },
+      "brainTeasersIndex": {
+        "method": "GET",
+        "path": "/brain-teasers",
+        "description": "Get available brain teasers for user",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "queryParams": {
+          "limit": "integer (optional, default: 10)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "brainTeasers": [
+              {
+                "id": "1",
+                "title": "Math Problem",
+                "question": "What is 2+2?",
+                "options": [
+                  "1",
+                  "2",
+                  "3",
+                  "4"
+                ],
+                "category": "Math",
+                "difficulty": "easy",
+                "rewardAmount": 10,
+                "startDate": "2025-09-04T00:00:00.000000Z",
+                "endDate": "2025-09-10T00:00:00.000000Z",
+                "status": "active",
+                "createdAt": "2025-09-04T10:00:00.000000Z",
+                "userAttempt": {
+                  "attempted": false
+                }
+              }
+            ]
+          },
+          "message": "Brain teasers retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 500,
+            "response": {
+              "success": false,
+              "message": "Failed to retrieve brain teasers",
+              "error": "Internal server error"
+            }
+          }
+        ]
+      },
+      "brainTeasersShow": {
+        "method": "GET",
+        "path": "/brain-teasers/{id}",
+        "description": "Get a specific brain teaser",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "brainTeaser": {
+              "id": "1",
+              "title": "Math Problem",
+              "question": "What is 2+2?",
+              "options": [
+                "1",
+                "2",
+                "3",
+                "4"
+              ],
+              "category": "Math",
+              "difficulty": "easy",
+              "rewardAmount": 10,
+              "startDate": "2025-09-04T00:00:00.000000Z",
+              "endDate": "2025-09-10T00:00:00.000000Z",
+              "status": "active",
+              "createdAt": "2025-09-04T10:00:00.000000Z",
+              "userAttempt": {
+                "attempted": false
+              }
+            }
+          },
+          "message": "Brain teaser retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 404,
+            "response": {
+              "success": false,
+              "message": "Brain teaser not found or not active"
+            }
+          },
+          {
+            "status": 500,
+            "response": {
+              "success": false,
+              "message": "Failed to retrieve brain teaser",
+              "error": "Internal server error"
+            }
+          }
+        ]
+      },
+      "brainTeasersSubmitAnswer": {
+        "method": "POST",
+        "path": "/brain-teasers/{id}/submit",
+        "description": "Submit answer for a brain teaser",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "requestBody": {
+          "answer": "string"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "attempt": {
+              "id": "1",
+              "brainTeaserId": "1",
+              "answer": "4",
+              "isCorrect": true,
+              "attemptedAt": "2025-09-04T10:00:00.000000Z",
+              "rewardEarned": 10,
+              "correctAnswer": "4",
+              "explanation": "2+2 equals 4"
+            }
+          },
+          "message": "Correct answer! Reward earned."
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 404,
+            "response": {
+              "success": false,
+              "message": "Brain teaser not found or not active"
+            }
+          },
+          {
+            "status": 400,
+            "response": {
+              "success": false,
+              "message": "You have already attempted this brain teaser"
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "Validation failed",
+              "errors": {
+                "answer": [
+                  "The answer field is required."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "brainTeasersMyAttempts": {
+        "method": "GET",
+        "path": "/brain-teasers/my-attempts",
+        "description": "Get user's brain teaser history",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "queryParams": {
+          "limit": "integer (optional, default: 10)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "attempts": [
+              {
+                "id": "1",
+                "brainTeaser": {
+                  "id": "1",
+                  "title": "Math Problem",
+                  "category": "Math",
+                  "difficulty": "easy"
+                },
+                "answer": "4",
+                "isCorrect": true,
+                "attemptedAt": "2025-09-04T10:00:00.000000Z",
+                "rewardEarned": 10
+              }
+            ]
+          },
+          "message": "Brain teaser history retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 500,
+            "response": {
+              "success": false,
+              "message": "Failed to retrieve brain teaser history",
+              "error": "Internal server error"
+            }
+          }
+        ]
+      },
+      "brainTeasersMyStats": {
+        "method": "GET",
+        "path": "/brain-teasers/my-stats",
+        "description": "Get brain teaser statistics",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "stats": {
+              "totalAttempts": 5,
+              "correctAttempts": 4,
+              "accuracy": 80,
+              "totalAvailable": 10,
+              "completed": 5,
+              "completionRate": 50,
+              "totalRewardsEarned": 40
+            }
+          },
+          "message": "Brain teaser statistics retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 500,
+            "response": {
+              "success": false,
+              "message": "Failed to retrieve brain teaser statistics",
+              "error": "Internal server error"
+            }
+          }
+        ]
+      },
+      "adsIndex": {
+        "method": "GET",
+        "path": "/ads",
+        "description": "Get available advertisements",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "ads": [
+              {
+                "id": "1",
+                "title": "Summer Sale",
+                "description": "50% off on all products",
+                "imageUrl": "https://example.com/ad.jpg",
+                "targetUrl": "https://example.com/sale",
+                "type": "banner",
+                "rewardAmount": 0.5,
+                "startDate": "2025-09-01T00:00:00.000000Z",
+                "endDate": "2025-09-30T00:00:00.000000Z",
+                "status": "active",
+                "createdAt": "2025-09-01T10:00:00.000000Z"
+              }
+            ]
+          },
+          "message": "Advertisements retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "adsShow": {
+        "method": "GET",
+        "path": "/ads/{id}",
+        "description": "Get a specific advertisement",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "ad": {
+              "id": "1",
+              "title": "Summer Sale",
+              "description": "50% off on all products",
+              "imageUrl": "https://example.com/ad.jpg",
+              "targetUrl": "https://example.com/sale",
+              "type": "banner",
+              "rewardAmount": 0.5,
+              "startDate": "2025-09-01T00:00:00.000000Z",
+              "endDate": "2025-09-30T00:00:00.000000Z",
+              "status": "active",
+              "createdAt": "2025-09-01T10:00:00.000000Z"
+            }
+          },
+          "message": "Advertisement retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 404,
+            "response": {
+              "success": false,
+              "message": "Advertisement not found"
+            }
+          }
+        ]
+      },
+      "adsInteract": {
+        "method": "POST",
+        "path": "/ads/{id}/interact",
+        "description": "Interact with an advertisement",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "requestBody": {
+          "action": "string (view|click)"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "interaction": {
+              "id": "1",
+              "adId": "1",
+              "userId": "1",
+              "action": "view",
+              "rewardEarned": 0.5,
+              "createdAt": "2025-09-04T10:00:00.000000Z"
+            }
+          },
+          "message": "Advertisement interaction recorded successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 404,
+            "response": {
+              "success": false,
+              "message": "Advertisement not found"
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "action": [
+                  "The action field is required."
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "transactionsIndex": {
+        "method": "GET",
+        "path": "/transactions",
+        "description": "Get user's transactions",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "transactions": [
+              {
+                "id": "1",
+                "transactionId": "TXN_1234567890",
+                "userId": "1",
+                "type": "earning",
+                "amount": 10.5,
+                "description": "Advertisement view reward",
+                "status": "completed",
+                "createdAt": "2025-09-04T10:00:00.000000Z"
+              }
+            ]
+          },
+          "message": "Transactions retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "walletSummary": {
+        "method": "GET",
+        "path": "/wallet/summary",
+        "description": "Get wallet summary",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "wallet": {
+              "balance": 100.5,
+              "totalEarnings": 150.0,
+              "totalWithdrawals": 49.5,
+              "pendingWithdrawals": 10.0
+            }
+          },
+          "message": "Wallet summary retrieved successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          }
+        ]
+      },
+      "walletWithdraw": {
+        "method": "POST",
+        "path": "/wallet/withdraw",
+        "description": "Request wallet withdrawal",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "requestBody": {
+          "amount": "number",
+          "paymentMethod": "string",
+          "paymentDetails": "object"
+        },
+        "successResponse": {
+          "success": true,
+          "data": {
+            "withdrawal": {
+              "id": "1",
+              "userId": "1",
+              "amount": 50.0,
+              "paymentMethod": "paypal",
+              "paymentDetails": {
+                "email": "user@example.com"
+              },
+              "status": "pending",
+              "createdAt": "2025-09-04T10:00:00.000000Z"
+            }
+          },
+          "message": "Withdrawal request submitted successfully"
+        },
+        "errorResponses": [
+          {
+            "status": 401,
+            "response": {
+              "success": false,
+              "message": "Unauthenticated."
+            }
+          },
+          {
+            "status": 422,
+            "response": {
+              "success": false,
+              "message": "The given data was invalid.",
+              "errors": {
+                "amount": [
+                  "The amount must be at least 10."
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
