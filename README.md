@@ -401,7 +401,7 @@ PUT  /api/v1/auth/profile
 ```
 
 #### Dashboard
-```http
+``http
 GET /api/v1/dashboard/stats
 GET /api/v1/dashboard/earnings
 GET /api/v1/dashboard/notifications
@@ -487,7 +487,8 @@ For detailed documentation of Admin Dashboard API endpoints, please refer to the
 
 ## 🔐 Admin Dashboard
 
-### Access
+### Admin Access
+
 - URL: `http://localhost:8000/admin`
 - Default credentials:
   - Email: `admin@visionhub.com`
