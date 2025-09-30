@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,12 @@ Route::middleware('guest')->group(function () {
     Route::get('/admin/login', function () {
         return view('auth.admin-login');
     })->name('admin.login');
+    
+    // Password Reset Routes
+    Route::get('/password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/password/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/password/reset', [ForgotPasswordController::class, 'reset'])->name('password.update');
 
     Route::post('/web-login', function (\Illuminate\Http\Request $request) {
         $credentials = $request->validate([
