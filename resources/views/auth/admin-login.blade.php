@@ -157,12 +157,6 @@
                                 Back to User Login
                             </a>
                         </div>
-                        
-                        <div class="text-center mt-3">
-                            <small class="text-muted">
-                                Create admin: <code>php artisan make:admin admin@example.com</code>
-                            </small>
-                        </div>
                     </div>
                 </div>
             </div>

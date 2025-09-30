@@ -171,8 +171,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->command->info('Database seeded successfully!');
-        $this->command->info('Demo credentials:');
-        $this->command->info('Admin: admin@visionhub.com / admin123');
-        $this->command->info('Demo: demo@visionhub.com / password123');
+        $this->command->info('For admin access, use the credentials created during installation.');
+        $this->command->info('If you need to create an admin user, run: php artisan make:admin user@example.com');
     }
 }

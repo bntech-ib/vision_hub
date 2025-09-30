@@ -43,12 +43,8 @@ class UserSeeder extends Seeder
             ]
         );
 
-        $this->command->info('Admin user created or already exists:');
-        $this->command->info('- Email: admin@visionhub.com');
-        $this->command->info('- Password: admin123');
-        $this->command->info('');
-        $this->command->info('Demo user created or already exists:');
-        $this->command->info('- Email: demo@visionhub.com');
-        $this->command->info('- Password: password123');
+        $this->command->info('Admin user created or already exists.');
+        $this->command->info('Demo user created or already exists.');
+        $this->command->info('Use php artisan make:admin to create additional admin users.');
     }
 }

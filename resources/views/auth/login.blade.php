@@ -83,43 +83,34 @@
                         
                         <form method="POST" action="{{ route('login.post') }}">
                             @csrf
-                            
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Address</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-envelope"></i>
-                                    </span>
-                                    <input 
-                                        type="email" 
-                                        class="form-control @error('email') is-invalid @enderror" 
-                                        id="email" 
-                                        name="email" 
-                                        value="{{ old('email') }}" 
-                                        required 
-                                        placeholder="Enter your email"
-                                    >
-                                </div>
+                                <input 
+                                    type="email" 
+                                    class="form-control @error('email') is-invalid @enderror" 
+                                    id="email" 
+                                    name="email" 
+                                    value="{{ old('email') }}" 
+                                    required 
+                                    autocomplete="email" 
+                                    autofocus
+                                    placeholder="Enter your email"
+                                >
                                 @error('email')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                             
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-lock"></i>
-                                    </span>
-                                    <input 
-                                        type="password" 
-                                        class="form-control @error('password') is-invalid @enderror" 
-                                        id="password" 
-                                        name="password" 
-                                        required 
-                                        placeholder="Enter your password"
-                                    >
-                                </div>
+                                <input 
+                                    type="password" 
+                                    class="form-control @error('password') is-invalid @enderror" 
+                                    id="password" 
+                                    name="password" 
+                                    required 
+                                    placeholder="Enter your password"
+                                >
                                 @error('password')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
@@ -133,10 +124,16 @@
                             </div>
                         </form>
                         
-                        <div class="text-center mt-4">
-                            <small class="text-muted">
-                                Demo: admin@visionhub.com / admin123
-                            </small>
+                        <div class="text-center mt-3">
+                            <a href="{{ route('password.request') }}" class="text-decoration-none">
+                                <small>Forgot Password?</small>
+                            </a>
+                        </div>
+                        
+                        <div class="text-center mt-2">
+                            <a href="{{ route('register') }}" class="text-decoration-none">
+                                <small>Don't have an account? Sign up</small>
+                            </a>
                         </div>
                     </div>
                 </div>

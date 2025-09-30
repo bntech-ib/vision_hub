@@ -1,0 +1,51 @@
+# Ignore OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vs/
+
+# Ignore Laravel specific files
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+.php_cs.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+.env.example
+
+# Ignore ZIP files
+*.zip
+
+# Ignore specific documentation files (as per user request)
+BALANCE_COMPONENTS.md
+PUSH_INSTRUCTIONS.md
+CPANEL_DEPLOYMENT.md
+ADMIN_ACCESS.md
+
+# Ignore log files
+.log
+
+# Ignore SQLite database
+*.sqlite
+*.sqlite3
+
+# Ignore Docker files (if needed)
+docker-compose.override.yml
