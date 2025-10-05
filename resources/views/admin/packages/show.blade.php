@@ -101,6 +101,40 @@
                         </div>
                     </div>
                 </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="row">
+                            <div class="col-sm-6"><strong>Daily Earning Limit:</strong></div>
+                            <div class="col-sm-6">${{ number_format($package->daily_earning_limit, 2) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="row">
+                            <div class="col-sm-6"><strong>Ad Interaction Limits:</strong></div>
+                            <div class="col-sm-6">{{ $package->ad_limits ?? 'Unlimited' }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="row">
+                            <div class="col-sm-6"><strong>Referral Earning Amount:</strong></div>
+                            <div class="col-sm-6">${{ number_format($package->referral_earning_percentage, 2) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="row">
+                            <div class="col-sm-6"><strong>Earning Per Ad:</strong></div>
+                            <div class="col-sm-6">${{ number_format($package->calculateEarningPerAd(), 2) }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -232,34 +266,9 @@
 
 @push('scripts')
 <script>
-function activatePackage(packageId) {
-    if (confirm('Are you sure you want to activate this package?')) {
-        fetch(`/admin/packages/${packageId}/activate`, {
-            method: 'PUT',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while activating the package.');
-        });
-    }
-}
-
 function deactivatePackage(packageId) {
     if (confirm('Are you sure you want to deactivate this package?')) {
-        fetch(`/admin/packages/${packageId}/deactivate`, {
+        fetch('/admin/packages/' + packageId + '/deactivate', {
             method: 'PUT',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -282,9 +291,34 @@ function deactivatePackage(packageId) {
     }
 }
 
+function activatePackage(packageId) {
+    if (confirm('Are you sure you want to activate this package?')) {
+        fetch('/admin/packages/' + packageId + '/activate', {
+            method: 'PUT',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while activating the package.');
+        });
+    }
+}
+
 function deletePackage(packageId) {
     if (confirm('Are you sure you want to delete this package?')) {
-        fetch(`/admin/packages/${packageId}`, {
+        fetch('/admin/packages/' + packageId, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

@@ -43,14 +43,14 @@
                     
                     <div class="mb-3">
                         <label for="duration_days" class="form-label">Duration (Days)</label>
-                        <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="{{ old('duration_days', $package->duration_days) }}">
-                        <div class="form-text">Leave blank for lifetime packages</div>
+                        <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="{{ old('duration_days', $package->duration_days) }}" required>
+                        <div class="form-text">Number of days the package is valid for</div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="features" class="form-label">Features (comma separated)</label>
                         <input type="text" class="form-control" id="features" name="features" value="{{ old('features', is_array($package->features) ? implode(', ', $package->features) : $package->features) }}">
-                        <div class="form-text">Enter features separated by commas</div>
+                        <div class="form-text">Enter features separated by commas. Leave empty for no features.</div>
                     </div>
                     
                     <div class="mb-3">
@@ -72,9 +72,27 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="daily_earning_limit" class="form-label">Daily Earning Limit ($)</label>
+                        <input type="number" class="form-control" id="daily_earning_limit" name="daily_earning_limit" step="0.01" min="0" value="{{ old('daily_earning_limit', $package->daily_earning_limit) }}">
+                        <div class="form-text">Maximum daily earning limit for ad interactions (0 for no limit)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ad_limits" class="form-label">Ad Interaction Limits</label>
+                        <input type="number" class="form-control" id="ad_limits" name="ad_limits" min="0" value="{{ old('ad_limits', $package->ad_limits) }}">
+                        <div class="form-text">Maximum number of ad interactions per day (0 for unlimited)</div>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="course_access_limit" class="form-label">Course Access Limit</label>
                         <input type="number" class="form-control" id="course_access_limit" name="course_access_limit" min="0" value="{{ old('course_access_limit', $package->course_access_limit) }}">
                         <div class="form-text">Maximum courses per month (0 for unlimited)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="referral_earning_percentage" class="form-label">Referral Earning Amount ($)</label>
+                        <input type="number" class="form-control" id="referral_earning_percentage" name="referral_earning_percentage" min="0" step="0.01" value="{{ old('referral_earning_percentage', $package->referral_earning_percentage) }}">
+                        <div class="form-text">Fixed amount of referral earnings users with this package will receive</div>
                     </div>
                     
                     <div class="mb-3 form-check">
@@ -131,6 +149,14 @@
                     <span>Duration:</span>
                     <span>{{ $package->duration_days ? $package->duration_days . ' days' : 'Lifetime' }}</span>
                 </div>
+                <div class="d-flex justify-content-between small">
+                    <span>Daily Earning Limit:</span>
+                    <span>${{ number_format($package->daily_earning_limit, 2) }}</span>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span>Ad Interaction Limits:</span>
+                    <span>{{ $package->ad_limits }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -143,15 +169,27 @@ document.getElementById('editPackageForm').addEventListener('submit', function(e
     e.preventDefault();
     
     const formData = new FormData(this);
-    const packageId = {{ $package->id }};
+    const packageId = "{{ $package->id }}";
     
     // Process features input
     const featuresInput = document.getElementById('features');
+    let featuresArray = [];
     if (featuresInput.value.trim() !== '') {
-        const featuresArray = featuresInput.value.split(',').map(feature => feature.trim()).filter(feature => feature !== '');
-        formData.set('features', JSON.stringify(featuresArray));
-    } else {
-        formData.set('features', JSON.stringify([]));
+        featuresArray = featuresInput.value.split(',')
+            .map(feature => feature.trim())
+            .filter(feature => feature !== '');
+    }
+    formData.set('features', JSON.stringify(featuresArray));
+    
+    // Ensure all checkboxes are properly handled
+    if (!document.getElementById('marketplace_access').checked) {
+        formData.set('marketplace_access', '0');
+    }
+    if (!document.getElementById('brain_teaser_access').checked) {
+        formData.set('brain_teaser_access', '0');
+    }
+    if (!document.getElementById('is_active').checked) {
+        formData.set('is_active', '0');
     }
     
     fetch(`/admin/packages/${packageId}`, {
@@ -162,18 +200,33 @@ document.getElementById('editPackageForm').addEventListener('submit', function(e
             'X-HTTP-Method-Override': 'PUT'
         },
     })
-    .then(response => response.json())
+    .then(response => {
+        // Handle non-JSON responses (like validation errors from Laravel)
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            return response.text().then(text => {
+                throw new Error("Server returned non-JSON response: " + text);
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            alert(data.message);
+            alert('Package updated successfully!');
             window.location.href = data.package ? `/admin/packages/${data.package.id}` : '/admin/packages';
         } else {
-            alert('Error: ' + data.message);
+            // Display validation errors if present
+            if (data.errors) {
+                let errorMessages = Object.values(data.errors).flat().join('\n');
+                alert('Validation Error:\n' + errorMessages);
+            } else {
+                alert('Error: ' + data.message);
+            }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while updating the package.');
+        alert('An error occurred while updating the package. Please try again.');
     });
 });
 </script>

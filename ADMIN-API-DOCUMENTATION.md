@@ -1,5 +1,9 @@
 # VisionHub Admin Dashboard API Documentation
 
+## ⚠️ DEPRECATED DOCUMENTATION
+
+**This documentation is deprecated. Please refer to the [VisionHub API V2 Documentation](VISIONHUB_API_V2_DOCUMENTATION.md) for the complete and up-to-date API documentation.**
+
 ## Overview
 This document provides a comprehensive guide to the VisionHub Admin Dashboard API endpoints, detailing their functionality, expected parameters, and response formats. The API is built with Laravel and follows RESTful principles, using JSON for data exchange.
 
@@ -37,6 +41,10 @@ X-Requested-With: XMLHttpRequest
   }
 }
 ```
+
+---
+
+**Note:** This documentation has been superseded by the V2 documentation which includes all available operations, implementations, response codes, data structures, and error handling. Please refer to [VISIONHUB_API_V2_DOCUMENTATION.md](VISIONHUB_API_V2_DOCUMENTATION.md) for complete API documentation.
 
 ## Admin Dashboard API Endpoints
 
@@ -515,7 +523,7 @@ Enable maintenance mode.
 ```
 
 **Success Response (200):**
-```json
+``json
 {
   "success": true,
   "message": "Maintenance mode enabled"
@@ -595,6 +603,24 @@ Delete a backup file.
 {
   "success": true,
   "message": "Backup deleted successfully"
+}
+```
+
+### API Status
+
+#### GET /admin/status
+Get the status of the VisionHub Backend API.
+
+**Success Response (200):**
+```json
+{
+  "status": "success",
+  "message": "VisionHub Backend API is running",
+  "version": "1.0.0",
+  "timestamp": "2025-09-04T10:00:00.000000Z",
+  "laravel_version": "10.x",
+  "environment": "production",
+  "debug_mode": false
 }
 ```
 

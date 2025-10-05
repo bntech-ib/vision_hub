@@ -48,6 +48,39 @@
             
             <div class="card mb-4">
                 <div class="card-header">
+                    <h5 class="mb-0">Bank Account Information</h5>
+                </div>
+                <div class="card-body">
+                    @php
+                        $bankDetails = $user->getAdminBankAccountDetails();
+                    @endphp
+                    
+                    @if($bankDetails['has_bound_bank_account'])
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Account Holder Name:</strong> {{ $bankDetails['bank_account_holder_name'] ?? 'N/A' }}</p>
+                                <p><strong>Bank Name:</strong> {{ $bankDetails['bank_name'] ?? 'N/A' }}</p>
+                                <p><strong>Bank Branch:</strong> {{ $bankDetails['bank_branch'] ?? 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Account Number:</strong> {{ $bankDetails['bank_account_number'] ?? 'N/A' }}</p>
+                                <p><strong>Routing Number:</strong> {{ $bankDetails['bank_routing_number'] ?? 'N/A' }}</p>
+                                <p><strong>Bound At:</strong> {{ $bankDetails['bank_account_bound_at'] ? $bankDetails['bank_account_bound_at']->format('M d, Y H:i') : 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Bank account details are encrypted for security and can only be updated by the user.
+                        </div>
+                    @else
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> This user has not bound their bank account details yet.
+                        </div>
+                    @endif
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
                     <h5 class="mb-0">User Relationships</h5>
                 </div>
                 <div class="card-body">
@@ -236,6 +269,8 @@
                                                 <th>ID</th>
                                                 <th>Title</th>
                                                 <th>Status</th>
+                                                <th>Budget</th>
+                                                <th>Spent</th>
                                                 <th>Created</th>
                                             </tr>
                                         </thead>
@@ -244,7 +279,13 @@
                                             <tr>
                                                 <td>{{ $ad->id }}</td>
                                                 <td>{{ $ad->title }}</td>
-                                                <td>{{ $ad->status }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $ad->status == 'active' ? 'success' : ($ad->status == 'pending' ? 'warning' : 'secondary') }}">
+                                                        {{ ucfirst($ad->status) }}
+                                                    </span>
+                                                </td>
+                                                <td>₦{{ number_format($ad->budget, 2) }}</td>
+                                                <td>₦{{ number_format($ad->spent, 2) }}</td>
                                                 <td>{{ $ad->created_at->format('M d, Y') }}</td>
                                             </tr>
                                             @endforeach
@@ -264,18 +305,24 @@
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Ad ID</th>
+                                                <th>Ad</th>
                                                 <th>Type</th>
-                                                <th>Created</th>
+                                                <th>Reward</th>
+                                                <th>Date</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach($user->adInteractions as $interaction)
                                             <tr>
                                                 <td>{{ $interaction->id }}</td>
-                                                <td>{{ $interaction->advertisement_id }}</td>
-                                                <td>{{ $interaction->type }}</td>
-                                                <td>{{ $interaction->created_at->format('M d, Y') }}</td>
+                                                <td>{{ $interaction->advertisement->title ?? 'N/A' }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $interaction->type == 'view' ? 'primary' : 'success' }}">
+                                                        {{ ucfirst($interaction->type) }}
+                                                    </span>
+                                                </td>
+                                                <td>₦{{ number_format($interaction->reward_earned, 2) }}</td>
+                                                <td>{{ $interaction->interacted_at->format('M d, Y H:i') }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
@@ -306,7 +353,11 @@
                                                 <td>{{ $product->id }}</td>
                                                 <td>{{ $product->name }}</td>
                                                 <td>₦{{ number_format($product->price, 2) }}</td>
-                                                <td>{{ $product->status }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $product->status == 'active' ? 'success' : 'secondary' }}">
+                                                        {{ ucfirst($product->status) }}
+                                                    </span>
+                                                </td>
                                                 <td>{{ $product->created_at->format('M d, Y') }}</td>
                                             </tr>
                                             @endforeach
@@ -338,7 +389,11 @@
                                                 <td>{{ $course->id }}</td>
                                                 <td>{{ $course->title }}</td>
                                                 <td>₦{{ number_format($course->price, 2) }}</td>
-                                                <td>{{ $course->status }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $course->status == 'published' ? 'success' : 'secondary' }}">
+                                                        {{ ucfirst($course->status) }}
+                                                    </span>
+                                                </td>
                                                 <td>{{ $course->created_at->format('M d, Y') }}</td>
                                             </tr>
                                             @endforeach
@@ -359,7 +414,6 @@
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Course</th>
-                                                <th>Status</th>
                                                 <th>Progress</th>
                                                 <th>Enrolled</th>
                                             </tr>
@@ -369,16 +423,15 @@
                                             <tr>
                                                 <td>{{ $enrollment->id }}</td>
                                                 <td>{{ $enrollment->course->title ?? 'N/A' }}</td>
-                                                <td>{{ $enrollment->status }}</td>
-                                                <td>{{ number_format($enrollment->progress_percentage, 2) }}%</td>
-                                                <td>{{ $enrollment->enrolled_at->format('M d, Y') }}</td>
+                                                <td>{{ $enrollment->progress }}%</td>
+                                                <td>{{ $enrollment->created_at->format('M d, Y') }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
                                 </div>
                             @else
-                                <p class="text-muted">No enrollments found.</p>
+                                <p class="text-muted">No course enrollments found.</p>
                             @endif
                         </div>
                         
@@ -391,8 +444,8 @@
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Question</th>
-                                                <th>Difficulty</th>
-                                                <th>Status</th>
+                                                <th>Category</th>
+                                                <th>Reward</th>
                                                 <th>Created</th>
                                             </tr>
                                         </thead>
@@ -401,8 +454,8 @@
                                             <tr>
                                                 <td>{{ $brainTeaser->id }}</td>
                                                 <td>{{ Str::limit($brainTeaser->question, 50) }}</td>
-                                                <td>{{ $brainTeaser->difficulty }}</td>
-                                                <td>{{ $brainTeaser->status }}</td>
+                                                <td>{{ $brainTeaser->category }}</td>
+                                                <td>₦{{ number_format($brainTeaser->reward_amount, 2) }}</td>
                                                 <td>{{ $brainTeaser->created_at->format('M d, Y') }}</td>
                                             </tr>
                                             @endforeach
@@ -423,6 +476,7 @@
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Brain Teaser</th>
+                                                <th>Answer</th>
                                                 <th>Correct</th>
                                                 <th>Attempted</th>
                                             </tr>
@@ -431,9 +485,16 @@
                                             @foreach($user->brainTeaserAttempts as $attempt)
                                             <tr>
                                                 <td>{{ $attempt->id }}</td>
-                                                <td>{{ Str::limit($attempt->brainTeaser->question ?? 'N/A', 50) }}</td>
-                                                <td>{{ $attempt->is_correct ? 'Yes' : 'No' }}</td>
-                                                <td>{{ $attempt->created_at->format('M d, Y') }}</td>
+                                                <td>{{ Str::limit($attempt->brainTeaser->question ?? 'N/A', 30) }}</td>
+                                                <td>{{ Str::limit($attempt->user_answer, 20) }}</td>
+                                                <td>
+                                                    @if($attempt->is_correct)
+                                                        <span class="badge bg-success">Yes</span>
+                                                    @else
+                                                        <span class="badge bg-danger">No</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $attempt->created_at->format('M d, Y H:i') }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
@@ -454,18 +515,28 @@
                                                 <th>ID</th>
                                                 <th>Type</th>
                                                 <th>Amount</th>
+                                                <th>Description</th>
                                                 <th>Status</th>
-                                                <th>Created</th>
+                                                <th>Date</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach($user->transactions as $transaction)
                                             <tr>
                                                 <td>{{ $transaction->id }}</td>
-                                                <td>{{ $transaction->type }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $transaction->type == 'credit' ? 'success' : 'danger' }}">
+                                                        {{ ucfirst($transaction->type) }}
+                                                    </span>
+                                                </td>
                                                 <td>₦{{ number_format($transaction->amount, 2) }}</td>
-                                                <td>{{ $transaction->status }}</td>
-                                                <td>{{ $transaction->created_at->format('M d, Y') }}</td>
+                                                <td>{{ Str::limit($transaction->description, 30) }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $transaction->status == 'completed' ? 'success' : 'warning' }}">
+                                                        {{ ucfirst($transaction->status) }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ $transaction->created_at->format('M d, Y H:i') }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
@@ -485,8 +556,9 @@
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Amount</th>
+                                                <th>Method</th>
                                                 <th>Status</th>
-                                                <th>Created</th>
+                                                <th>Requested</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -494,8 +566,13 @@
                                             <tr>
                                                 <td>{{ $withdrawal->id }}</td>
                                                 <td>₦{{ number_format($withdrawal->amount, 2) }}</td>
-                                                <td>{{ $withdrawal->status }}</td>
-                                                <td>{{ $withdrawal->created_at->format('M d, Y') }}</td>
+                                                <td>{{ $withdrawal->payment_method }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $withdrawal->status == 'completed' ? 'success' : ($withdrawal->status == 'pending' ? 'warning' : 'danger') }}">
+                                                        {{ ucfirst($withdrawal->status) }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ $withdrawal->created_at->format('M d, Y H:i') }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
@@ -516,25 +593,25 @@
                                                 <th>ID</th>
                                                 <th>Key</th>
                                                 <th>Package</th>
-                                                <th>Status</th>
+                                                <th>Uses</th>
                                                 <th>Created</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($user->createdAccessKeys as $accessKey)
+                                            @foreach($user->createdAccessKeys as $key)
                                             <tr>
-                                                <td>{{ $accessKey->id }}</td>
-                                                <td>{{ $accessKey->key }}</td>
-                                                <td>{{ $accessKey->package->name ?? 'N/A' }}</td>
-                                                <td>{{ $accessKey->is_active ? 'Active' : 'Inactive' }}</td>
-                                                <td>{{ $accessKey->created_at->format('M d, Y') }}</td>
+                                                <td>{{ $key->id }}</td>
+                                                <td>{{ Str::limit($key->key, 15) }}</td>
+                                                <td>{{ $key->package->name ?? 'N/A' }}</td>
+                                                <td>{{ $key->used_count }} / {{ $key->max_uses }}</td>
+                                                <td>{{ $key->created_at->format('M d, Y') }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
                                 </div>
                             @else
-                                <p class="text-muted">No access keys found.</p>
+                                <p class="text-muted">No access keys created.</p>
                             @endif
                         </div>
                         
@@ -547,6 +624,8 @@
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Title</th>
+                                                <th>Budget</th>
+                                                <th>Spent</th>
                                                 <th>Status</th>
                                                 <th>Created</th>
                                             </tr>
@@ -555,8 +634,14 @@
                                             @foreach($user->sponsoredPosts as $post)
                                             <tr>
                                                 <td>{{ $post->id }}</td>
-                                                <td>{{ $post->title }}</td>
-                                                <td>{{ $post->status }}</td>
+                                                <td>{{ Str::limit($post->title, 30) }}</td>
+                                                <td>₦{{ number_format($post->budget, 2) }}</td>
+                                                <td>₦{{ number_format($post->spent, 2) }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ $post->status == 'active' ? 'success' : 'secondary' }}">
+                                                        {{ ucfirst($post->status) }}
+                                                    </span>
+                                                </td>
                                                 <td>{{ $post->created_at->format('M d, Y') }}</td>
                                             </tr>
                                             @endforeach
@@ -570,169 +655,32 @@
                         
                         <!-- Referrals -->
                         <div class="tab-pane fade" id="referrals" role="tabpanel">
-                            @php
-                                $referralStats = $user->getReferralStats();
-                            @endphp
-                            
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <div class="text-center p-3 bg-primary text-white rounded">
-                                        <h4>{{ $referralStats['level1_count'] }}</h4>
-                                        <p class="mb-0">Level 1 Referrals</p>
-                                    </div>
+                            @if($user->referrals->count() > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Joined</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($user->referrals as $referral)
+                                            <tr>
+                                                <td>{{ $referral->id }}</td>
+                                                <td>{{ $referral->name }}</td>
+                                                <td>{{ $referral->email }}</td>
+                                                <td>{{ $referral->created_at->format('M d, Y') }}</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="text-center p-3 bg-success text-white rounded">
-                                        <h4>{{ $referralStats['level2_count'] }}</h4>
-                                        <p class="mb-0">Level 2 Referrals</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-center p-3 bg-info text-white rounded">
-                                        <h4>{{ $referralStats['level3_count'] }}</h4>
-                                        <p class="mb-0">Level 3 Referrals</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            @php
-                                $referralEarnings = $user->getReferralEarningsByLevel();
-                            @endphp
-                            
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <div class="text-center p-3 bg-warning text-white rounded">
-                                        <h4>₦{{ number_format($referralEarnings['level1'], 2) }}</h4>
-                                        <p class="mb-0">Level 1 Earnings</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-center p-3 bg-secondary text-white rounded">
-                                        <h4>₦{{ number_format($referralEarnings['level2'], 2) }}</h4>
-                                        <p class="mb-0">Level 2 Earnings</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-center p-3 bg-dark text-white rounded">
-                                        <h4>₦{{ number_format($referralEarnings['level3'], 2) }}</h4>
-                                        <p class="mb-0">Level 3 Earnings</p>
-                                    </div>
-                                </div>
-                                <div class="col-12 mt-3">
-                                    <div class="text-center p-3 bg-success text-white rounded">
-                                        <h4>₦{{ number_format($referralEarnings['total'], 2) }}</h4>
-                                        <p class="mb-0">Total Referral Earnings</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <ul class="nav nav-tabs mb-3" id="referralLevelsTab" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="level1-tab" data-bs-toggle="tab" data-bs-target="#level1" type="button" role="tab">Level 1</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="level2-tab" data-bs-toggle="tab" data-bs-target="#level2" type="button" role="tab">Level 2</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="level3-tab" data-bs-toggle="tab" data-bs-target="#level3" type="button" role="tab">Level 3</button>
-                                </li>
-                            </ul>
-                            
-                            <div class="tab-content" id="referralLevelsTabContent">
-                                <!-- Level 1 Referrals -->
-                                <div class="tab-pane fade show active" id="level1" role="tabpanel">
-                                    @if($user->referralsLevel1->count() > 0)
-                                        <div class="table-responsive">
-                                            <table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>ID</th>
-                                                        <th>Name</th>
-                                                        <th>Email</th>
-                                                        <th>Created</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($user->referralsLevel1 as $referral)
-                                                    <tr>
-                                                        <td>{{ $referral->id }}</td>
-                                                        <td>{{ $referral->name }}</td>
-                                                        <td>{{ $referral->email }}</td>
-                                                        <td>{{ $referral->created_at->format('M d, Y') }}</td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @else
-                                        <p class="text-muted">No level 1 referrals found.</p>
-                                    @endif
-                                </div>
-                                
-                                <!-- Level 2 Referrals -->
-                                <div class="tab-pane fade" id="level2" role="tabpanel">
-                                    @if($user->referralsLevel2()->count() > 0)
-                                        <div class="table-responsive">
-                                            <table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>ID</th>
-                                                        <th>Name</th>
-                                                        <th>Email</th>
-                                                        <th>Referred By</th>
-                                                        <th>Created</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($user->referralsLevel2()->get() as $referral)
-                                                    <tr>
-                                                        <td>{{ $referral->id }}</td>
-                                                        <td>{{ $referral->name }}</td>
-                                                        <td>{{ $referral->email }}</td>
-                                                        <td>{{ $referral->referredBy->name ?? 'N/A' }}</td>
-                                                        <td>{{ $referral->created_at->format('M d, Y') }}</td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @else
-                                        <p class="text-muted">No level 2 referrals found.</p>
-                                    @endif
-                                </div>
-                                
-                                <!-- Level 3 Referrals -->
-                                <div class="tab-pane fade" id="level3" role="tabpanel">
-                                    @if($user->referralsLevel3()->count() > 0)
-                                        <div class="table-responsive">
-                                            <table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>ID</th>
-                                                        <th>Name</th>
-                                                        <th>Email</th>
-                                                        <th>Referred By</th>
-                                                        <th>Created</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($user->referralsLevel3()->get() as $referral)
-                                                    <tr>
-                                                        <td>{{ $referral->id }}</td>
-                                                        <td>{{ $referral->name }}</td>
-                                                        <td>{{ $referral->email }}</td>
-                                                        <td>{{ $referral->referredBy->name ?? 'N/A' }}</td>
-                                                        <td>{{ $referral->created_at->format('M d, Y') }}</td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @else
-                                        <p class="text-muted">No level 3 referrals found.</p>
-                                    @endif
-                                </div>
-                            </div>
+                            @else
+                                <p class="text-muted">No referrals found.</p>
+                            @endif
                         </div>
                         
                         <!-- Referred By -->
@@ -745,7 +693,7 @@
                                                 <th>ID</th>
                                                 <th>Name</th>
                                                 <th>Email</th>
-                                                <th>Created</th>
+                                                <th>Joined</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -759,35 +707,60 @@
                                     </table>
                                 </div>
                             @else
-                                <p class="text-muted">Not referred by anyone.</p>
+                                <p class="text-muted">This user was not referred by anyone.</p>
                             @endif
                         </div>
                     </div>
                 </div>
             </div>
-            
+        </div>
+        
+        <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Statistics</h5>
+                    <h5 class="mb-0">User Statistics</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <div class="text-center p-3 bg-light rounded">
+                            <div class="text-center p-3 bg-primary text-white rounded">
                                 <h4>{{ $stats['total_transactions'] }}</h4>
-                                <p class="mb-0">Total Transactions</p>
+                                <p class="mb-0">Transactions</p>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="text-center p-3 bg-light rounded">
+                            <div class="text-center p-3 bg-success text-white rounded">
+                                <h4>₦{{ number_format($stats['total_earned'], 2) }}</h4>
+                                <p class="mb-0">Total Earned</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-danger text-white rounded">
                                 <h4>₦{{ number_format($stats['total_spent'], 2) }}</h4>
                                 <p class="mb-0">Total Spent</p>
                             </div>
                         </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
                         <div class="col-md-4">
-                            <div class="text-center p-3 bg-light rounded">
-                                <h4>₦{{ number_format($stats['total_earned'], 2) }}</h4>
-                                <p class="mb-0">Total Earned</p>
+                            <div class="text-center p-3 bg-info text-white rounded">
+                                <h4>₦{{ number_format($stats['normal_earnings'], 2) }}</h4>
+                                <p class="mb-0">Normal Earnings</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-success text-white rounded">
+                                <h4>₦{{ number_format($stats['referral_earnings'], 2) }}</h4>
+                                <p class="mb-0">Referral Earnings</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-info text-white rounded">
+                                <h4>₦{{ number_format($stats['total_earnings'], 2) }}</h4>
+                                <p class="mb-0">Total Earnings</p>
                             </div>
                         </div>
                     </div>

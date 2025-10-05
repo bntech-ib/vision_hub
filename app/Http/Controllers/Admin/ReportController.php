@@ -330,7 +330,10 @@ class ReportController extends Controller
         return [
             'total_users' => User::count(),
             'new_registrations' => User::whereBetween('created_at', $dateRange)->count(),
-            'active_users' => User::where('last_login_at', '>=', now()->subDays(30))->count(),
+            'active_users' => User::whereHas('securityLogs', function ($query) {
+                $query->where('action', 'login_successful')
+                      ->where('created_at', '>=', now()->subDays(30));
+            })->count(),
             'verified_users' => User::whereNotNull('email_verified_at')->count()
         ];
     }

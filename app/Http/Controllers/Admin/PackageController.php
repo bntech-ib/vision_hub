@@ -12,23 +12,31 @@ use Illuminate\View\View;
 class PackageController extends Controller
 {
     /**
-     * Display a listing of user packages
+     * Display a listing of the packages
      */
     public function index(Request $request): View
     {
         $query = UserPackage::withCount('users');
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        
+        // Apply filters if provided
+        if ($request->has('search') && $request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
-
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'active');
+        
+        if ($request->has('status')) {
+            if ($request->status == 'active') {
+                $query->where('is_active', true);
+            } elseif ($request->status == 'inactive') {
+                $query->where('is_active', false);
+            }
         }
-
-        $packages = $query->orderBy('created_at', 'desc')->paginate(20);
-
+        
+        if ($request->has('min_price') && $request->min_price) {
+            $query->where('price', '>=', $request->min_price);
+        }
+        
+        $packages = $query->paginate(15);
+        
         return view('admin.packages.index', compact('packages'));
     }
 
@@ -47,21 +55,35 @@ class PackageController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'duration_days' => 'nullable|integer|min:1',
-            'features' => 'nullable|array',
-            'ad_views_limit' => 'nullable|integer|min:0',
+            'duration_days' => 'required|integer|min:1',
+            'features' => 'nullable|string',
+            'ad_views_limit' => 'integer|min:0',
+            'daily_earning_limit' => 'numeric|min:0',
+            'ad_limits' => 'integer|min:0',
             'course_access_limit' => 'nullable|integer|min:0',
-            'marketplace_access' => 'nullable|boolean',
-            'brain_teaser_access' => 'nullable|boolean',
-            'is_active' => 'nullable|boolean'
+            'marketplace_access' => 'boolean',
+            'brain_teaser_access' => 'boolean',
+            'is_active' => 'boolean',
+            'referral_earning_percentage' => 'nullable|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/'
         ]);
 
         // Convert checkbox values
         $validated['marketplace_access'] = $request->has('marketplace_access');
         $validated['brain_teaser_access'] = $request->has('brain_teaser_access');
         $validated['is_active'] = $request->has('is_active');
+        
+        // Process features if provided as JSON string
+        if (isset($validated['features'])) {
+            $features = json_decode($validated['features'], true);
+            if (is_array($features)) {
+                $validated['features'] = $features;
+            } else {
+                // If it's not valid JSON, treat as comma-separated string
+                $validated['features'] = array_filter(array_map('trim', explode(',', $validated['features'])));
+            }
+        }
 
         $package = UserPackage::create($validated);
 
@@ -80,8 +102,9 @@ class PackageController extends Controller
         $package->loadCount('users');
         
         $subscribers = User::where('current_package_id', $package->id)
-            ->with(['transactions' => function ($query) use ($package) {
-                $query->where('package_id', $package->id);
+            ->with(['transactions' => function ($query) {
+                // Transactions are linked to users, not packages directly
+                // We'll load all transactions for users with this package
             }])
             ->paginate(20);
 
@@ -115,22 +138,36 @@ class PackageController extends Controller
     public function update(Request $request, UserPackage $package): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'price' => 'required|numeric|min:0',
-            'duration_days' => 'nullable|integer|min:1',
-            'features' => 'nullable|array',
-            'ad_views_limit' => 'nullable|integer|min:0',
+            'name' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'sometimes|required|numeric|min:0',
+            'duration_days' => 'sometimes|required|integer|min:1',
+            'features' => 'nullable|string',
+            'ad_views_limit' => 'integer|min:0',
+            'daily_earning_limit' => 'numeric|min:0',
+            'ad_limits' => 'integer|min:0',
             'course_access_limit' => 'nullable|integer|min:0',
-            'marketplace_access' => 'nullable|boolean',
-            'brain_teaser_access' => 'nullable|boolean',
-            'is_active' => 'nullable|boolean'
+            'marketplace_access' => 'boolean',
+            'brain_teaser_access' => 'boolean',
+            'is_active' => 'boolean',
+            'referral_earning_percentage' => 'nullable|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/'
         ]);
 
         // Convert checkbox values
         $validated['marketplace_access'] = $request->has('marketplace_access');
         $validated['brain_teaser_access'] = $request->has('brain_teaser_access');
         $validated['is_active'] = $request->has('is_active');
+        
+        // Process features if provided as JSON string
+        if (isset($validated['features'])) {
+            $features = json_decode($validated['features'], true);
+            if (is_array($features)) {
+                $validated['features'] = $features;
+            } else {
+                // If it's not valid JSON, treat as comma-separated string
+                $validated['features'] = array_filter(array_map('trim', explode(',', $validated['features'])));
+            }
+        }
 
         $package->update($validated);
 
@@ -201,8 +238,9 @@ class PackageController extends Controller
     public function subscribers(UserPackage $package): JsonResponse
     {
         $subscribers = User::where('current_package_id', $package->id)
-            ->with(['transactions' => function ($query) use ($package) {
-                $query->where('package_id', $package->id)->latest();
+            ->with(['transactions' => function ($query) {
+                // Transactions are linked to users, not packages directly
+                $query->latest();
             }])
             ->paginate(20);
 
@@ -217,11 +255,14 @@ class PackageController extends Controller
      */
     private function calculatePackageRevenue(UserPackage $package): float
     {
-        // This would be implemented based on your transaction model
-        // return Transaction::where('package_id', $package->id)
-        //     ->where('status', 'completed')
-        //     ->sum('amount');
-        return 0; // Placeholder
+        // Get all users with this package
+        $userIds = User::where('current_package_id', $package->id)->pluck('id');
+        
+        // Sum transactions for these users
+        return \App\Models\Transaction::whereIn('user_id', $userIds)
+            ->where('status', 'completed')
+            ->where('type', 'purchase') // Only count purchase transactions
+            ->sum('amount');
     }
 
     /**
@@ -229,12 +270,15 @@ class PackageController extends Controller
      */
     private function calculateMonthlyRevenue(UserPackage $package): float
     {
-        // This would be implemented based on your transaction model
-        // return Transaction::where('package_id', $package->id)
-        //     ->where('status', 'completed')
-        //     ->whereMonth('created_at', now()->month)
-        //     ->whereYear('created_at', now()->year)
-        //     ->sum('amount');
-        return 0; // Placeholder
+        // Get all users with this package
+        $userIds = User::where('current_package_id', $package->id)->pluck('id');
+        
+        // Sum transactions for these users in the current month
+        return \App\Models\Transaction::whereIn('user_id', $userIds)
+            ->where('status', 'completed')
+            ->where('type', 'purchase') // Only count purchase transactions
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('amount');
     }
 }

@@ -56,6 +56,14 @@ class Transaction extends Model
     }
 
     /**
+     * Alias for reference() to match controller expectations
+     */
+    public function referenceable()
+    {
+        return $this->reference();
+    }
+
+    /**
      * Mark transaction as completed
      */
     public function markAsCompleted(): void

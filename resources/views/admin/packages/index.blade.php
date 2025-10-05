@@ -114,6 +114,7 @@
             </table>
         </div>
         
+        @if($packages->count() > 0)
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 Showing {{ $packages->firstItem() }} to {{ $packages->lastItem() }} of {{ $packages->total() }} packages
@@ -122,6 +123,7 @@
                 {{ $packages->links() }}
             </div>
         </div>
+        @endif
     </div>
 </div>
 

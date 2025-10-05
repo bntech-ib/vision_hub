@@ -71,9 +71,19 @@ class AuthController extends Controller
 
         // Award referral bonuses if applicable
         if ($referrer) {
-            // Award direct referral bonus (Level 1)
-            $level1Bonus = 100; // Amount in your currency
-            $referrer->addToWallet($level1Bonus);
+            // Base referral amounts
+            $baseLevel1Bonus = 100; // Amount in your currency
+            $baseLevel2Bonus = 50;  // Amount in your currency
+            $baseLevel3Bonus = 25;  // Amount in your currency
+            
+            // Calculate actual bonus amounts based on the package that was applied to the new user
+            $level1Bonus = $baseLevel1Bonus;
+            if ($accessKey->package && $accessKey->package->referral_earning_percentage > 0) {
+                $level1Bonus = (float) $accessKey->package->referral_earning_percentage;
+            }
+            
+            // Award direct referral bonus (Level 1) to referral earnings
+            $referrer->addToReferralEarnings($level1Bonus);
             
             // Log the referral bonus
             \App\Models\ReferralBonus::create([
@@ -87,15 +97,19 @@ class AuthController extends Controller
             // Log the transaction for the referrer
             $referrer->transactions()->create([
                 'amount' => $level1Bonus,
-                'type' => 'earning',
+                'type' => 'referral_earning',
                 'description' => 'Direct referral bonus for ' . $user->username,
                 'status' => 'completed',
             ]);
             
             // Award indirect referral bonus (Level 2)
             if ($referrer->referredBy) {
-                $level2Bonus = 50; // Amount in your currency
-                $referrer->referredBy->addToWallet($level2Bonus);
+                $level2Bonus = $baseLevel2Bonus;
+                if ($accessKey->package && $accessKey->package->referral_earning_percentage > 0) {
+                    $level2Bonus = (float) $accessKey->package->referral_earning_percentage;
+                }
+                
+                $referrer->referredBy->addToReferralEarnings($level2Bonus);
                 
                 // Log the referral bonus
                 \App\Models\ReferralBonus::create([
@@ -109,15 +123,19 @@ class AuthController extends Controller
                 // Log the transaction for the indirect referrer
                 $referrer->referredBy->transactions()->create([
                     'amount' => $level2Bonus,
-                    'type' => 'earning',
+                    'type' => 'referral_earning',
                     'description' => 'Indirect referral bonus for ' . $user->username,
                     'status' => 'completed',
                 ]);
                 
                 // Award indirect referral bonus (Level 3)
                 if ($referrer->referredBy->referredBy) {
-                    $level3Bonus = 25; // Amount in your currency
-                    $referrer->referredBy->referredBy->addToWallet($level3Bonus);
+                    $level3Bonus = $baseLevel3Bonus;
+                    if ($accessKey->package && $accessKey->package->referral_earning_percentage > 0) {
+                        $level3Bonus = (float) $accessKey->package->referral_earning_percentage;
+                    }
+                    
+                    $referrer->referredBy->referredBy->addToReferralEarnings($level3Bonus);
                     
                     // Log the referral bonus
                     \App\Models\ReferralBonus::create([
@@ -131,7 +149,7 @@ class AuthController extends Controller
                     // Log the transaction for the second indirect referrer
                     $referrer->referredBy->referredBy->transactions()->create([
                         'amount' => $level3Bonus,
-                        'type' => 'earning',
+                        'type' => 'referral_earning',
                         'description' => 'Second indirect referral bonus for ' . $user->username,
                         'status' => 'completed',
                     ]);
@@ -184,6 +202,11 @@ class AuthController extends Controller
                         'level2Earnings' => (float)$referralEarnings['level2'],
                         'level3Earnings' => (float)$referralEarnings['level3'],
                         'totalEarnings' => (float)$referralEarnings['total'],
+                    ],
+                    'earnings' => [
+                        'normalEarnings' => (float)$user->getNormalEarnings(),
+                        'referralEarnings' => (float)$user->getReferralEarnings(),
+                        'totalEarnings' => (float)$user->getTotalEarnings(),
                     ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [
@@ -279,6 +302,11 @@ class AuthController extends Controller
                         'level3Earnings' => (float)$referralEarnings['level3'],
                         'totalEarnings' => (float)$referralEarnings['total'],
                     ],
+                    'earnings' => [
+                        'normalEarnings' => (float)$user->getNormalEarnings(),
+                        'referralEarnings' => (float)$user->getReferralEarnings(),
+                        'totalEarnings' => (float)$user->getTotalEarnings(),
+                    ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [
                             'id' => (string)$referral->id,
@@ -369,6 +397,11 @@ class AuthController extends Controller
                         'level2Earnings' => (float)$referralEarnings['level2'],
                         'level3Earnings' => (float)$referralEarnings['level3'],
                         'totalEarnings' => (float)$referralEarnings['total'],
+                    ],
+                    'earnings' => [
+                        'normalEarnings' => (float)$user->getNormalEarnings(),
+                        'referralEarnings' => (float)$user->getReferralEarnings(),
+                        'totalEarnings' => (float)$user->getTotalEarnings(),
                     ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [
@@ -483,6 +516,11 @@ class AuthController extends Controller
                         'level3Earnings' => (float)$referralEarnings['level3'],
                         'totalEarnings' => (float)$referralEarnings['total'],
                     ],
+                    'earnings' => [
+                        'normalEarnings' => (float)$user->getNormalEarnings(),
+                        'referralEarnings' => (float)$user->getReferralEarnings(),
+                        'totalEarnings' => (float)$user->getTotalEarnings(),
+                    ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [
                             'id' => (string)$referral->id,
@@ -570,6 +608,11 @@ class AuthController extends Controller
                         'level2Earnings' => (float)$referralEarnings['level2'],
                         'level3Earnings' => (float)$referralEarnings['level3'],
                         'totalEarnings' => (float)$referralEarnings['total'],
+                    ],
+                    'earnings' => [
+                        'normalEarnings' => (float)$user->getNormalEarnings(),
+                        'referralEarnings' => (float)$user->getReferralEarnings(),
+                        'totalEarnings' => (float)$user->getTotalEarnings(),
                     ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [

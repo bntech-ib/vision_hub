@@ -122,6 +122,9 @@ class UserController extends Controller
             'total_transactions' => $user->transactions()->count(),
             'total_spent' => $user->transactions()->where('type', 'debit')->sum('amount'),
             'total_earned' => $user->transactions()->where('type', 'credit')->sum('amount'),
+            'normal_earnings' => $user->getNormalEarnings(),
+            'referral_earnings' => $user->getReferralEarnings(),
+            'total_earnings' => $user->getTotalEarnings(),
         ];
         
         return view('admin.users.show', compact('user', 'stats'));
@@ -151,6 +154,7 @@ class UserController extends Controller
             'current_package_id' => 'nullable|exists:user_packages,id',
             'is_admin' => 'boolean',
             'wallet_balance' => 'nullable|numeric|min:0',
+            'referral_earnings' => 'nullable|numeric|min:0',
         ]);
         
         if ($request->filled('password')) {
@@ -225,7 +229,7 @@ class UserController extends Controller
     /**
      * Enable withdrawal access globally
      */
-    public function enableWithdrawalGlobally()
+    public function enableWithdrawalGlobally(Request $request)
     {
         \App\Models\GlobalSetting::set('withdrawal_enabled', true);
         
@@ -235,7 +239,7 @@ class UserController extends Controller
     /**
      * Disable withdrawal access globally
      */
-    public function disableWithdrawalGlobally()
+    public function disableWithdrawalGlobally(Request $request)
     {
         \App\Models\GlobalSetting::set('withdrawal_enabled', false);
         

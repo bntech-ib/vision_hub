@@ -7,6 +7,22 @@
         <a href="{{ route('admin.ads.index') }}" class="btn btn-secondary">Back to List</a>
     </div>
 
+    @if(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
             <form action="{{ route('admin.ads.store') }}" method="POST" enctype="multipart/form-data">
@@ -89,6 +105,18 @@
                         </div>
                     </div>
                     
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="reward_amount" class="form-label">Reward Amount (₦)</label>
+                            <input type="number" step="0.01" class="form-control" id="reward_amount" name="reward_amount" value="{{ old('reward_amount') }}" required>
+                            @error('reward_amount')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="image" class="form-label">Image</label>

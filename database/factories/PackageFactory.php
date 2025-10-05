@@ -32,6 +32,7 @@ class PackageFactory extends Factory
             'brain_teaser_access' => $this->faker->boolean(80),
             'duration_days' => $this->faker->numberBetween(1, 365),
             'is_active' => $this->faker->boolean(80), // 80% chance of being active
+            'referral_earning_percentage' => $this->faker->randomFloat(2, 0, 25), // 0-25% referral earnings
         ];
     }
 }

@@ -1,5 +1,9 @@
 # VisionHub API Documentation
 
+## ⚠️ DEPRECATED DOCUMENTATION
+
+**This documentation is deprecated. Please refer to the [VisionHub API V2 Documentation](VISIONHUB_API_V2_DOCUMENTATION.md) for the complete and up-to-date API documentation.**
+
 ## Overview
 This document provides comprehensive documentation for the VisionHub API endpoints, including request/response formats and error handling.
 
@@ -38,24 +42,6 @@ All API responses follow a consistent format:
 ```
 
 ## Public Endpoints
-
-### Get API Status
-**GET** `/status`
-
-Retrieve the current status of the API.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "status": "ok",
-    "timestamp": "2025-09-04T10:00:00.000000Z",
-    "version": "1.0"
-  },
-  "message": "API is running"
-}
-```
 
 ### Get API Information
 **GET** `/info`
@@ -842,7 +828,7 @@ Authorization: Bearer <token>
 ```
 
 **Success Response:**
-```json
+``json
 {
   "success": true,
   "data": {

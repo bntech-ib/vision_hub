@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BlockedIP;
 use App\Models\SecurityLog;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -56,11 +57,15 @@ class SecurityMonitoringService
                     ->limit(10)
                     ->get();
                 
+                // Get blocked IPs count
+                $blockedIPsCount = BlockedIP::where('is_active', true)->count();
+                
                 return [
                     'total_logs' => $totalLogs,
                     'threat_logs' => $threatLogs,
                     'failed_logins' => $failedLogins,
                     'successful_logins' => $successfulLogins,
+                    'blocked_ips' => $blockedIPsCount,
                     'threat_percentage' => $totalLogs > 0 ? round(($threatLogs / $totalLogs) * 100, 2) : 0,
                     'login_success_rate' => ($successfulLogins + $failedLogins) > 0 ? 
                         round(($successfulLogins / ($successfulLogins + $failedLogins)) * 100, 2) : 0,
@@ -76,6 +81,7 @@ class SecurityMonitoringService
                     'threat_logs' => 0,
                     'failed_logins' => 0,
                     'successful_logins' => 0,
+                    'blocked_ips' => 0,
                     'threat_percentage' => 0,
                     'login_success_rate' => 0,
                     'recent_threats' => collect(),
@@ -208,6 +214,93 @@ class SecurityMonitoringService
             'top_threat_ips' => $topThreatIPs,
             'top_activity_ips' => $topActivityIPs,
         ];
+    }
+    
+    /**
+     * Get blocked IPs with filtering options
+     */
+    public function getBlockedIPs(array $filters = []): array
+    {
+        $query = BlockedIP::with(['blocker:id,name,email', 'unblocker:id,name,email']);
+        
+        // Apply filters
+        if (!empty($filters['ip_address'])) {
+            $query->where('ip_address', 'like', '%' . $filters['ip_address'] . '%');
+        }
+        
+        if (!empty($filters['active_only']) && $filters['active_only']) {
+            $query->where('is_active', true);
+        }
+        
+        if (!empty($filters['blocked_by'])) {
+            $query->where('blocked_by', $filters['blocked_by']);
+        }
+        
+        if (!empty($filters['date_from'])) {
+            $query->where('blocked_at', '>=', $filters['date_from']);
+        }
+        
+        if (!empty($filters['date_to'])) {
+            $query->where('blocked_at', '<=', $filters['date_to']);
+        }
+        
+        // Get paginated results
+        $perPage = $filters['per_page'] ?? 50;
+        $blockedIPs = $query->orderBy('blocked_at', 'desc')
+            ->paginate($perPage);
+        
+        return [
+            'blocked_ips' => $blockedIPs,
+            'total' => $blockedIPs->total(),
+        ];
+    }
+    
+    /**
+     * Block an IP address
+     */
+    public function blockIP(string $ipAddress, ?string $reason = null, ?int $blockedBy = null): BlockedIP
+    {
+        $blockedIP = BlockedIP::updateOrCreate(
+            ['ip_address' => $ipAddress],
+            [
+                'reason' => $reason,
+                'blocked_by' => $blockedBy,
+                'blocked_at' => now(),
+                'is_active' => true,
+                'unblocked_at' => null,
+                'unblocked_by' => null,
+                'unblock_reason' => null,
+            ]
+        );
+        
+        // Clear the cache for this IP
+        Cache::forget("blocked_ip_{$ipAddress}");
+        
+        return $blockedIP;
+    }
+    
+    /**
+     * Unblock an IP address
+     */
+    public function unblockIP(int $id, ?string $reason = null, ?int $unblockedBy = null): bool
+    {
+        $blockedIP = BlockedIP::find($id);
+        
+        if (!$blockedIP || !$blockedIP->is_active) {
+            return false;
+        }
+        
+        $blockedIP->update([
+            'is_active' => false,
+            'unblocked_at' => now(),
+            'unblocked_by' => $unblockedBy,
+            'unblock_reason' => $reason,
+        ]);
+        
+        // Clear the cache for this IP
+        Cache::forget("blocked_ip_{$blockedIP->ip_address}");
+        
+        return true;
     }
     
     /**

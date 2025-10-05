@@ -165,7 +165,10 @@ class DashboardController extends Controller
     {
         try {
             $totalUsers = User::count();
-            $activeUsers = User::where('last_login_at', '>=', now()->subDays(30))->count();
+            $activeUsers = User::whereHas('securityLogs', function ($query) {
+                $query->where('action', 'login_successful')
+                      ->where('created_at', '>=', now()->subDays(30));
+            })->count();
             $premiumUsers = User::whereNotNull('current_package_id')->count();
             $newUsers = User::where('created_at', '>=', now()->subDays(30))->count();
             

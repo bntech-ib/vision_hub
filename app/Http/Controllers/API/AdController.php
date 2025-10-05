@@ -24,15 +24,16 @@ class AdController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            /** @var User $user */
             $user = Auth::user();
             $limit = $request->get('limit', 10);
             $page = $request->get('page', 1);
             
-            // Check if user has reached their ad view limit
-            if ($user->hasReachedAdViewLimit()) {
+            // Check if user has reached their daily ad interaction limit
+            if ($user->hasReachedDailyAdInteractionLimit()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You have reached your ad view limit for this month based on your package.'
+                    'message' => 'You have reached your daily ad interaction limit based on your package.'
                 ], 403);
             }
             
@@ -52,7 +53,11 @@ class AdController extends Controller
                 });
             }
             
-            // Apply pagination
+            // Apply pagination with package-based limit if applicable
+            if ($user->hasActivePackage() && $user->currentPackage->ad_limits > 0) {
+                $limit = min($limit, $user->currentPackage->ad_limits);
+            }
+            
             $ads = $query->paginate($limit, ['*'], 'page', $page);
             
             // Format ads to match documentation
@@ -150,8 +155,10 @@ class AdController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            /** @var User $user */
+            $user = Auth::user();
             // Check if user is admin
-            if (!Auth::user()->is_admin) {
+            if (!$user->is_admin) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized. Admin access required.'
@@ -232,8 +239,10 @@ class AdController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         try {
+            /** @var User $user */
+            $user = Auth::user();
             // Check if user is admin
-            if (!Auth::user()->is_admin) {
+            if (!$user->is_admin) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized. Admin access required.'
@@ -315,8 +324,10 @@ class AdController extends Controller
     public function destroy($id): JsonResponse
     {
         try {
+            /** @var User $user */
+            $user = Auth::user();
             // Check if user is admin
-            if (!Auth::user()->is_admin) {
+            if (!$user->is_admin) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized. Admin access required.'
@@ -352,6 +363,7 @@ class AdController extends Controller
     {
         try {
             $ad = Advertisement::findOrFail($id);
+            /** @var User $user */
             $user = Auth::user();
             
             // Validate request
@@ -359,11 +371,11 @@ class AdController extends Controller
                 'type' => 'required|in:view,click'
             ]);
             
-            // Check if user has reached their ad view limit (only for views)
-            if ($validated['type'] === 'view' && $user->hasReachedAdViewLimit()) {
+            // Check if user has reached their daily ad interaction limit (only for views)
+            if ($validated['type'] === 'view' && $user->hasReachedDailyAdInteractionLimit()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You have reached your ad view limit for this month based on your package.'
+                    'message' => 'You have reached your daily ad interaction limit based on your package.'
                 ], 403);
             }
             
@@ -373,6 +385,12 @@ class AdController extends Controller
                     'success' => false,
                     'message' => 'This advertisement is not currently active'
                 ], 400);
+            }
+            
+            // Calculate earning based on user's package
+            $earningPerAd = 0;
+            if ($user->hasActivePackage()) {
+                $earningPerAd = $user->currentPackage->calculateEarningPerAd();
             }
             
             // Record interaction based on type
@@ -386,7 +404,7 @@ class AdController extends Controller
                         'user_id' => $user->id,
                         'advertisement_id' => $ad->id,
                         'type' => 'view',
-                        'earnings' => $ad->reward_amount,
+                        'reward_earned' => $earningPerAd,
                         'interacted_at' => now()
                     ]);
 
@@ -394,22 +412,16 @@ class AdController extends Controller
                     $ad->increment('impressions');
                     
                     // Award earnings to user
-                    if ($ad->reward_amount > 0) {
-                        $user->addToWallet($ad->reward_amount);
+                    if ($earningPerAd > 0) {
+                        $user->addToWallet($earningPerAd);
                         
                         // Create transaction record
                         Transaction::create([
                             'user_id' => $user->id,
+                            'amount' => $earningPerAd,
                             'type' => 'earning',
-                            'amount' => $ad->reward_amount,
-                            'description' => "Advertisement view reward: {$ad->title}",
-                            'status' => 'completed',
-                            'reference_type' => 'App\Models\Advertisement',
-                            'reference_id' => $ad->id,
-                            'metadata' => [
-                                'advertisement_id' => $ad->id,
-                                'interaction_id' => $interaction->id
-                            ]
+                            'description' => "Reward for viewing advertisement #{$ad->id}",
+                            'status' => 'completed'
                         ]);
                     }
 
@@ -418,46 +430,34 @@ class AdController extends Controller
                     return response()->json([
                         'success' => true,
                         'data' => [
-                            'interaction' => [
-                                'id' => (string)$interaction->id,
-                                'userId' => (string)$interaction->user_id,
-                                'adId' => (string)$interaction->advertisement_id,
-                                'type' => $interaction->type,
-                                'earnings' => (int)$interaction->earnings,
-                                'timestamp' => $interaction->interacted_at->toISOString()
-                            ]
+                            'interaction' => $interaction,
+                            'remaining_interactions' => $user->getRemainingDailyAdInteractions()
                         ],
                         'message' => 'Ad view recorded successfully'
                     ]);
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to record ad view',
-                        'error' => $e->getMessage()
-                    ], 500);
+                    throw $e;
                 }
             } else {
-                // Record click
+                // Record click (2x the view reward)
                 try {
                     DB::beginTransaction();
 
-                    // For clicks, we'll award a higher reward (e.g., 5x the view reward)
-                    $clickReward = $ad->reward_amount * 5;
-
+                    // Calculate click reward (2x view reward)
+                    $clickReward = $earningPerAd * 2;
+                    
                     // Record interaction
                     $interaction = AdInteraction::create([
                         'user_id' => $user->id,
                         'advertisement_id' => $ad->id,
                         'type' => 'click',
-                        'earnings' => $clickReward,
+                        'reward_earned' => $clickReward,
                         'interacted_at' => now()
                     ]);
 
                     // Update ad statistics
                     $ad->increment('clicks');
-                    $ad->increment('spent', $clickReward);
                     
                     // Award earnings to user
                     if ($clickReward > 0) {
@@ -466,16 +466,10 @@ class AdController extends Controller
                         // Create transaction record
                         Transaction::create([
                             'user_id' => $user->id,
-                            'type' => 'earning',
                             'amount' => $clickReward,
-                            'description' => "Advertisement click reward: {$ad->title}",
-                            'status' => 'completed',
-                            'reference_type' => 'App\Models\Advertisement',
-                            'reference_id' => $ad->id,
-                            'metadata' => [
-                                'advertisement_id' => $ad->id,
-                                'interaction_id' => $interaction->id
-                            ]
+                            'type' => 'earning',
+                            'description' => "Reward for clicking advertisement #{$ad->id}",
+                            'status' => 'completed'
                         ]);
                     }
 
@@ -484,31 +478,65 @@ class AdController extends Controller
                     return response()->json([
                         'success' => true,
                         'data' => [
-                            'interaction' => [
-                                'id' => (string)$interaction->id,
-                                'userId' => (string)$interaction->user_id,
-                                'adId' => (string)$interaction->advertisement_id,
-                                'type' => $interaction->type,
-                                'earnings' => (int)$interaction->earnings,
-                                'timestamp' => $interaction->interacted_at->toISOString()
-                            ]
+                            'interaction' => $interaction
                         ],
                         'message' => 'Ad click recorded successfully'
                     ]);
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to record ad click',
-                        'error' => $e->getMessage()
-                    ], 500);
+                    throw $e;
                 }
             }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process ad interaction',
+                'message' => 'Failed to record ad interaction',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user's ad interaction statistics
+     */
+    public function getStats(): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+            
+            // Get today's interactions
+            $todayInteractions = $user->adInteractions()
+                ->whereDate('interacted_at', now()->toDateString())
+                ->get();
+                
+            $todayViews = $todayInteractions->where('type', 'view')->count();
+            $todayClicks = $todayInteractions->where('type', 'click')->count();
+            
+            // Get package limit
+            $dailyLimit = 0;
+            if ($user->hasActivePackage() && $user->currentPackage->ad_views_limit) {
+                $dailyLimit = $user->currentPackage->ad_views_limit;
+            }
+            
+            // Calculate remaining interactions
+            $remainingInteractions = $user->getRemainingDailyAdInteractions();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'today_views' => $todayViews,
+                    'today_clicks' => $todayClicks,
+                    'daily_limit' => $dailyLimit,
+                    'remaining_interactions' => $remainingInteractions,
+                    'has_reached_limit' => $user->hasReachedDailyAdInteractionLimit()
+                ],
+                'message' => 'Ad statistics retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve ad statistics',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -520,34 +548,48 @@ class AdController extends Controller
     public function myInteractions(Request $request): JsonResponse
     {
         try {
+            /** @var User $user */
             $user = Auth::user();
-            $limit = $request->get('limit', 10);
-            
-            $interactions = AdInteraction::where('user_id', $user->id)
-                ->with('advertisement:id,title')
-                ->latest()
-                ->limit($limit)
-                ->get();
-                
-            // Format interactions to match documentation
+            $limit = $request->get('limit', 15);
+            $page = $request->get('page', 1);
+
+            // Get user's ad interactions with advertisement details
+            $interactions = AdInteraction::with('advertisement')
+                ->where('user_id', $user->id)
+                ->orderBy('interacted_at', 'desc')
+                ->paginate($limit, ['*'], 'page', $page);
+
+            // Format interactions data
             $formattedInteractions = $interactions->map(function ($interaction) {
                 return [
                     'id' => (string)$interaction->id,
-                    'userId' => (string)$interaction->user_id,
-                    'adId' => (string)$interaction->advertisement_id,
-                    'adTitle' => $interaction->advertisement->title ?? 'Unknown Ad',
+                    'advertisement_id' => (string)$interaction->advertisement_id,
                     'type' => $interaction->type,
-                    'earnings' => (int)$interaction->earnings,
-                    'timestamp' => $interaction->interacted_at->toISOString()
+                    'reward_earned' => (float)$interaction->reward_earned,
+                    'interacted_at' => $interaction->interacted_at->toISOString(),
+                    'advertisement' => $interaction->advertisement ? [
+                        'id' => (string)$interaction->advertisement->id,
+                        'title' => $interaction->advertisement->title,
+                        'description' => $interaction->advertisement->description
+                    ] : null
                 ];
             });
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'interactions' => $formattedInteractions
+                    'interactions' => $formattedInteractions,
+                    'meta' => [
+                        'pagination' => [
+                            'total' => $interactions->total(),
+                            'count' => $interactions->count(),
+                            'per_page' => $interactions->perPage(),
+                            'current_page' => $interactions->currentPage(),
+                            'total_pages' => $interactions->lastPage()
+                        ]
+                    ]
                 ],
-                'message' => 'Your ad interactions retrieved successfully'
+                'message' => 'Ad interactions retrieved successfully'
             ]);
         } catch (\Exception $e) {
             return response()->json([

@@ -7,6 +7,7 @@ use App\Models\Advertisement;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AdController extends Controller
 {
@@ -82,30 +83,54 @@ class AdController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'advertiser_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'target_url' => 'required|url',
-            'category' => 'required|string',
-            'budget' => 'required|numeric|min:0',
-            'reward_amount' => 'required|numeric|min:0',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after:start_date',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-        
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            $validated['image_url'] = $request->file('image')->store('ad-images', 'public');
+        try {
+            // Log the request data for debugging
+            Log::info('Advertisement creation request data:', $request->all());
+            
+            $validated = $request->validate([
+                'advertiser_id' => 'required|exists:users,id',
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'target_url' => 'required|url',
+                'category' => 'required|string',
+                'budget' => 'required|numeric|min:0',
+                'reward_amount' => 'required|numeric|min:0',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after:start_date',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+            
+            Log::info('Advertisement validation passed:', $validated);
+            
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $validated['image_url'] = $request->file('image')->store('ad-images', 'public');
+                Log::info('Image uploaded:', ['image_url' => $validated['image_url']]);
+            }
+            
+            $validated['status'] = 'pending'; // Default status for admin review
+            
+            $ad = Advertisement::create($validated);
+            
+            Log::info('Advertisement created successfully:', ['id' => $ad->id]);
+            
+            return redirect()->route('admin.ads.index')
+                ->with('success', 'Advertisement created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Advertisement validation failed:', $e->errors());
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->errors())
+                ->with('error', 'Validation failed. Please check the form and try again.');
+        } catch (\Exception $e) {
+            Log::error('Error creating advertisement:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error creating advertisement: ' . $e->getMessage());
         }
-        
-        $validated['status'] = 'pending'; // Default status for admin review
-        
-        Advertisement::create($validated);
-        
-        return redirect()->route('admin.ads.index')
-            ->with('success', 'Advertisement created successfully.');
     }
     
     /**
@@ -154,33 +179,39 @@ class AdController extends Controller
      */
     public function update(Request $request, Advertisement $ad)
     {
-        $validated = $request->validate([
-            'advertiser_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'target_url' => 'required|url',
-            'category' => 'required|string',
-            'budget' => 'required|numeric|min:0',
-            'reward_amount' => 'required|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'status' => 'required|in:pending,active,paused,completed,rejected',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-        
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($ad->image_url) {
-                Storage::disk('public')->delete($ad->image_url);
+        try {
+            $validated = $request->validate([
+                'advertiser_id' => 'required|exists:users,id',
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'target_url' => 'required|url',
+                'category' => 'required|string',
+                'budget' => 'required|numeric|min:0',
+                'reward_amount' => 'required|numeric|min:0',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after:start_date',
+                'status' => 'required|in:pending,active,paused,completed,rejected',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+            
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($ad->image_url) {
+                    Storage::disk('public')->delete($ad->image_url);
+                }
+                $validated['image_url'] = $request->file('image')->store('ad-images', 'public');
             }
-            $validated['image_url'] = $request->file('image')->store('ad-images', 'public');
+            
+            $ad->update($validated);
+            
+            return redirect()->route('admin.ads.show', $ad)
+                ->with('success', 'Advertisement updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error updating advertisement: ' . $e->getMessage());
         }
-        
-        $ad->update($validated);
-        
-        return redirect()->route('admin.ads.show', $ad)
-            ->with('success', 'Advertisement updated successfully.');
     }
     
     /**

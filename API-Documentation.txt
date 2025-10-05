@@ -89,6 +89,23 @@ Registers a new user in the system.
         "duration": 30
       },
       "referralCode": "VHABCDEF",
+      "referralStats": {
+        "level1Count": 0,
+        "level2Count": 0,
+        "level3Count": 0,
+        "totalCount": 0
+      },
+      "referralEarnings": {
+        "level1Earnings": 0.00,
+        "level2Earnings": 0.00,
+        "level3Earnings": 0.00,
+        "totalEarnings": 0.00
+      },
+      "earnings": {
+        "normalEarnings": 0.00,
+        "referralEarnings": 0.00,
+        "totalEarnings": 0.00
+      },
       "createdAt": "2024-01-20T10:00:00Z",
       "updatedAt": "2024-01-20T10:00:00Z"
     }
@@ -128,6 +145,23 @@ Authenticates a user and returns an access token.
         "duration": 30
       },
       "referralCode": "VHABCDEF",
+      "referralStats": {
+        "level1Count": 5,
+        "level2Count": 3,
+        "level3Count": 2,
+        "totalCount": 10
+      },
+      "referralEarnings": {
+        "level1Earnings": 500.00,
+        "level2Earnings": 150.00,
+        "level3Earnings": 50.00,
+        "totalEarnings": 700.00
+      },
+      "earnings": {
+        "normalEarnings": 1200.00,
+        "referralEarnings": 700.00,
+        "totalEarnings": 1900.00
+      },
       "createdAt": "2024-01-20T10:00:00Z",
       "updatedAt": "2024-01-20T10:00:00Z"
     },
@@ -171,6 +205,23 @@ Retrieves the authenticated user's information.
         "duration": 30
       },
       "referralCode": "VHABCDEF",
+      "referralStats": {
+        "level1Count": 5,
+        "level2Count": 3,
+        "level3Count": 2,
+        "totalCount": 10
+      },
+      "referralEarnings": {
+        "level1Earnings": 500.00,
+        "level2Earnings": 150.00,
+        "level3Earnings": 50.00,
+        "totalEarnings": 700.00
+      },
+      "earnings": {
+        "normalEarnings": 1200.00,
+        "referralEarnings": 700.00,
+        "totalEarnings": 1900.00
+      },
       "createdAt": "2024-01-20T10:00:00Z",
       "updatedAt": "2024-01-20T10:00:00Z"
     }
@@ -211,11 +262,239 @@ Updates the authenticated user's profile information.
         "duration": 30
       },
       "referralCode": "VHABCDEF",
+      "referralStats": {
+        "level1Count": 5,
+        "level2Count": 3,
+        "level3Count": 2,
+        "totalCount": 10
+      },
+      "referralEarnings": {
+        "level1Earnings": 500.00,
+        "level2Earnings": 150.00,
+        "level3Earnings": 50.00,
+        "totalEarnings": 700.00
+      },
+      "earnings": {
+        "normalEarnings": 1200.00,
+        "referralEarnings": 700.00,
+        "totalEarnings": 1900.00
+      },
       "createdAt": "2024-01-20T10:00:00Z",
       "updatedAt": "2024-01-20T11:00:00Z"
     }
   },
   "message": "Profile updated successfully"
+}
+```
+
+### User Profile Endpoints
+
+#### GET /api/v1/user/profile
+Retrieves the authenticated user's profile information including bank account details and referral earnings.
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "1",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "+2341234567890",
+      "country": "Nigeria",
+      "package": {
+        "id": "1",
+        "name": "Silver Package",
+        "price": 5000,
+        "benefits": ["Daily earnings up to ₦500", "Referral bonuses", "Access to marketplace"],
+        "duration": 30
+      },
+      "referralCode": "VHABCDEF",
+      "referralStats": {
+        "level1Count": 5,
+        "level2Count": 3,
+        "level3Count": 2,
+        "totalCount": 10
+      },
+      "referralEarnings": {
+        "level1Earnings": 500.00,
+        "level2Earnings": 150.00,
+        "level3Earnings": 50.00,
+        "totalEarnings": 700.00
+      },
+      "earnings": {
+        "normalEarnings": 1200.00,
+        "referralEarnings": 700.00,
+        "totalEarnings": 1900.00
+      },
+      "has_bound_bank_account": true,
+      "bank_account_bound_at": "2024-01-20T10:00:00Z",
+      "bank_account_holder_name": "John Doe",
+      "bank_name": "First Bank",
+      "bank_branch": "Lagos Main Branch",
+      "bank_account_number": "1234567890",
+      "bank_routing_number": "0123456789",
+      "withdrawals_enabled": true,
+      "can_request_withdrawal": true
+    }
+  }
+}
+```
+
+#### PUT /api/v1/user/profile
+Updates the authenticated user's profile information.
+
+**Request Body:**
+```json
+{
+  "name": "John Smith",
+  "phone": "+2341234567891",
+  "country": "Ghana"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "1",
+      "name": "John Smith",
+      "email": "john@example.com",
+      "phone": "+2341234567891",
+      "country": "Ghana",
+      "package": {
+        "id": "1",
+        "name": "Silver Package",
+        "price": 5000,
+        "benefits": ["Daily earnings up to ₦500", "Referral bonuses", "Access to marketplace"],
+        "duration": 30
+      },
+      "referralCode": "VHABCDEF",
+      "referralStats": {
+        "level1Count": 5,
+        "level2Count": 3,
+        "level3Count": 2,
+        "totalCount": 10
+      },
+      "referralEarnings": {
+        "level1Earnings": 500.00,
+        "level2Earnings": 150.00,
+        "level3Earnings": 50.00,
+        "totalEarnings": 700.00
+      },
+      "earnings": {
+        "normalEarnings": 1200.00,
+        "referralEarnings": 700.00,
+        "totalEarnings": 1900.00
+      },
+      "has_bound_bank_account": true,
+      "bank_account_bound_at": "2024-01-20T10:00:00Z",
+      "bank_account_holder_name": "John Smith",
+      "bank_name": "First Bank",
+      "bank_branch": "Lagos Main Branch",
+      "bank_account_number": "1234567890",
+      "bank_routing_number": "0123456789",
+      "withdrawals_enabled": true,
+      "can_request_withdrawal": true
+    }
+  },
+  "message": "Profile updated successfully"
+}
+```
+
+#### POST /api/v1/user/bank-account/bind
+Binds bank account details to the user's profile (can only be done once).
+
+**Request Body:**
+```json
+{
+  "bank_account_holder_name": "John Doe",
+  "bank_account_number": "1234567890",
+  "bank_name": "First Bank",
+  "bank_branch": "Lagos Main Branch",
+  "bank_routing_number": "0123456789"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Bank account details bound successfully.",
+  "data": {
+    "user": {
+      "id": "1",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "+2341234567890",
+      "country": "Nigeria",
+      "package": {
+        "id": "1",
+        "name": "Silver Package",
+        "price": 5000,
+        "benefits": ["Daily earnings up to ₦500", "Referral bonuses", "Access to marketplace"],
+        "duration": 30
+      },
+      "referralCode": "VHABCDEF",
+      "referralStats": {
+        "level1Count": 5,
+        "level2Count": 3,
+        "level3Count": 2,
+        "totalCount": 10
+      },
+      "referralEarnings": {
+        "level1Earnings": 500.00,
+        "level2Earnings": 150.00,
+        "level3Earnings": 50.00,
+        "totalEarnings": 700.00
+      },
+      "earnings": {
+        "normalEarnings": 1200.00,
+        "referralEarnings": 700.00,
+        "totalEarnings": 1900.00
+      },
+      "has_bound_bank_account": true,
+      "bank_account_bound_at": "2024-01-20T10:00:00Z",
+      "bank_account_holder_name": "John Doe",
+      "bank_name": "First Bank",
+      "bank_branch": "Lagos Main Branch",
+      "bank_account_number": "1234567890",
+      "bank_routing_number": "0123456789"
+    }
+  }
+}
+```
+
+#### GET /api/v1/user/withdrawal-status
+Retrieves the user's withdrawal status and bank account information.
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "withdrawals_enabled": true,
+    "can_request_withdrawal": true,
+    "user_withdrawal_enabled": true,
+    "has_bound_bank_account": true,
+    "bank_account_holder_name": "John Doe",
+    "bank_name": "First Bank",
+    "bank_branch": "Lagos Main Branch",
+    "referralEarnings": {
+      "level1Earnings": 500.00,
+      "level2Earnings": 150.00,
+      "level3Earnings": 50.00,
+      "totalEarnings": 700.00
+    },
+    "earnings": {
+      "normalEarnings": 1200.00,
+      "referralEarnings": 700.00,
+      "totalEarnings": 1900.00
+    }
+  }
 }
 ```
 

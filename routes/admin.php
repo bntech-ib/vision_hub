@@ -133,21 +133,30 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Settings Management
     Route::prefix('settings')->name('settings.')->controller(SettingsController::class)->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::post('/general', 'updateGeneral')->name('general.update');
-        Route::post('/appearance', 'updateAppearance')->name('appearance.update');
-        Route::post('/security', 'updateSecurity')->name('security.update');
-        Route::post('/financial', 'updateFinancial')->name('financial.update');
-        Route::post('/notifications', 'updateNotifications')->name('notifications.update');
-        Route::post('/integrations', 'updateIntegrations')->name('integrations.update');
+        Route::put('/general', 'updateGeneral')->name('general.update');
+        Route::put('/email', 'updateEmail')->name('email.update');
+        Route::put('/storage', 'updateStorage')->name('storage.update');
+        Route::put('/processing', 'updateProcessing')->name('processing.update');
+        Route::put('/security', 'updateSecurity')->name('security.update');
+        Route::put('/financial', 'updateFinancial')->name('financial.update');
+        Route::put('/notifications', 'updateNotifications')->name('notifications.update');
+        Route::put('/integrations', 'updateIntegrations')->name('integrations.update');
+        // Test routes
+        Route::get('/test/email', 'testEmail')->name('test.email');
+        Route::get('/test/storage', 'testStorage')->name('test.storage');
     });
     
     // Reports
     Route::prefix('reports')->name('reports.')->controller(ReportController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/users', 'users')->name('users');
+        Route::get('/projects', 'projects')->name('projects');
+        Route::get('/processing', 'processing')->name('processing');
         Route::get('/revenue', 'revenue')->name('revenue');
+        Route::get('/storage', 'storage')->name('storage');
         Route::get('/activity', 'activity')->name('activity');
         Route::get('/performance', 'performance')->name('performance');
+        Route::get('/security-logs', 'securityLogs')->name('security-logs');
         Route::get('/export/{type}', 'export')->name('export');
     });
     
@@ -165,6 +174,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/verify', 'verify')->name('verify');
     });
     
+    // API Status
+    Route::get('/status', [\App\Http\Controllers\ApiController::class, 'status'])->name('api.status');
+    
     // Security Monitoring
     Route::prefix('security-monitoring')->name('security-monitoring.')->controller(SecurityMonitoringController::class)->group(function () {
         Route::get('/', 'index')->name('index');
@@ -172,9 +184,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/stats', 'getStats')->name('stats');
         Route::get('/analytics/threats', 'getThreatAnalytics')->name('analytics.threats');
         Route::get('/analytics/ip', 'getIPAnalytics')->name('analytics.ip');
+        Route::get('/blocked-ips', 'getBlockedIPs')->name('blocked-ips');
         Route::post('/clear-cache', 'clearCache')->name('clear-cache');
         Route::post('/block-ip', 'blockIP')->name('block-ip');
-        Route::post('/unblock-ip', 'unblockIP')->name('unblock-ip');
+        Route::post('/unblock-ip/{id}', 'unblockIP')->name('unblock-ip');
     });
     
     // Courses Management

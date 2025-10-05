@@ -20,9 +20,34 @@ class SupportOptionController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        $result = [];
+        foreach ($supportOptions as $option) {
+            // Manually generate the WhatsApp link
+            $whatsappLink = null;
+            if ($option->whatsapp_number && $option->whatsapp_message) {
+                $number = preg_replace('/[^0-9]/', '', $option->whatsapp_number);
+                $message = rawurlencode($option->whatsapp_message);
+                $whatsappLink = "https://wa.me/{$number}?text={$message}";
+            }
+            
+            $result[] = [
+                'id' => $option->id,
+                'title' => $option->title,
+                'description' => $option->description,
+                'icon' => $option->icon,
+                'whatsapp_link' => $whatsappLink,
+                'whatsapp_number' => $option->whatsapp_number,
+                'whatsapp_message' => $option->whatsapp_message,
+                'sort_order' => $option->sort_order,
+                'is_active' => $option->is_active,
+                'created_at' => $option->created_at,
+                'updated_at' => $option->updated_at,
+            ];
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $supportOptions,
+            'data' => $result,
             'message' => 'Support options retrieved successfully'
         ]);
     }

@@ -490,9 +490,7 @@ For detailed documentation of Admin Dashboard API endpoints, please refer to the
 ### Admin Access
 
 - URL: `http://localhost:8000/admin`
-- Default credentials:
-  - Email: `admin@visionhub.com`
-  - Password: `admin123`
+- Default credentials are set during installation. For security reasons, please change the default admin password immediately after installation.
 
 ### Features
 

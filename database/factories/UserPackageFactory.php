@@ -28,6 +28,7 @@ class UserPackageFactory extends Factory
             'brain_teaser_access' => $this->faker->boolean(),
             'duration_days' => $this->faker->randomElement([null, 30, 90, 180, 365]),
             'is_active' => true,
+            'referral_earning_percentage' => $this->faker->randomFloat(2, 0, 25), // 0-25% referral earnings
         ];
     }
 
@@ -53,6 +54,7 @@ class UserPackageFactory extends Factory
             'name' => 'Premium Package',
             'marketplace_access' => true,
             'brain_teaser_access' => true,
+            'referral_earning_percentage' => $this->faker->randomFloat(2, 10, 25), // 10-25% for premium
         ]);
     }
 }

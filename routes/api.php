@@ -14,8 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Public API endpoints; this should be moved to admin
-Route::get('/status', [\App\Http\Controllers\ApiController::class, 'status']);
+// Public API endpoints
 Route::get('/info', [\App\Http\Controllers\ApiController::class, 'info']);
 Route::get('/health', [\App\Http\Controllers\ApiController::class, 'health']);
 Route::get('/file-types', [\App\Http\Controllers\ApiController::class, 'fileTypes']);
@@ -74,40 +73,6 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::put('/auth/profile', [\App\Http\Controllers\AuthController::class, 'updateProfile']);
     Route::put('/auth/change-password', [\App\Http\Controllers\AuthController::class, 'changePassword']);
     
-    // Token management this should be moved to admin
-    Route::get('/auth/tokens', [\App\Http\Controllers\AuthController::class, 'tokens']);
-    Route::post('/auth/tokens', [\App\Http\Controllers\AuthController::class, 'createToken']);
-    Route::delete('/auth/tokens', [\App\Http\Controllers\AuthController::class, 'revokeToken']);
-    
-    // Project routes this should be moved to admin
-    Route::apiResource('projects', \App\Http\Controllers\ProjectController::class);
-    Route::get('/projects/{project}/stats', [\App\Http\Controllers\ProjectController::class, 'stats']);
-    
-    // Image routes (nested under projects) - with upload rate limiting; this should be moved to admin
-    Route::middleware(['throttle:uploads'])->group(function () {
-        Route::post('/projects/{project}/images', [\App\Http\Controllers\ImageController::class, 'store']);
-    });
-    
-    Route::get('/projects/{project}/images', [\App\Http\Controllers\ImageController::class, 'index']);
-    Route::get('/projects/{project}/images/{image}', [\App\Http\Controllers\ImageController::class, 'show']);
-    Route::put('/projects/{project}/images/{image}', [\App\Http\Controllers\ImageController::class, 'update']);
-    Route::delete('/projects/{project}/images/{image}', [\App\Http\Controllers\ImageController::class, 'destroy']);
-    Route::get('/projects/{project}/images/{image}/download', [\App\Http\Controllers\ImageController::class, 'download']);
-    
-    // Processing job routes this should be moved to admin
-    Route::get('/processing-jobs', [\App\Http\Controllers\ProcessingJobController::class, 'index']);
-    Route::post('/processing-jobs', [\App\Http\Controllers\ProcessingJobController::class, 'store']);
-    Route::get('/processing-jobs/{processingJob}', [\App\Http\Controllers\ProcessingJobController::class, 'show']);
-    Route::post('/processing-jobs/{processingJob}/cancel', [\App\Http\Controllers\ProcessingJobController::class, 'cancel']);
-    Route::get('/job-types', [\App\Http\Controllers\ProcessingJobController::class, 'jobTypes']);
-    
-    // Tag routesthis should be moved to admin
-    Route::apiResource('tags', \App\Http\Controllers\TagController::class);
-    Route::get('/tags-popular', [\App\Http\Controllers\TagController::class, 'popular']);
-    Route::get('/tags-suggestions', [\App\Http\Controllers\TagController::class, 'suggestions']);
-    Route::post('/tags-bulk', [\App\Http\Controllers\TagController::class, 'bulkCreate']);
-    
-    
     // VisionHub Platform API Routes
     
     // Dashboard routes
@@ -125,27 +90,16 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::delete('/ads/{id}', [\App\Http\Controllers\API\AdController::class, 'destroy']);
     Route::post('/ads/{id}/interact', [\App\Http\Controllers\API\AdController::class, 'interact']);
     Route::get('/ads/history/my-interactions', [\App\Http\Controllers\API\AdController::class, 'myInteractions']);
+    Route::get('/ads/stats', [\App\Http\Controllers\API\AdController::class, 'getStats']);
     
-    // Marketplace routes
-    Route::get('/products', [\App\Http\Controllers\API\MarketplaceController::class, 'index']);
-    Route::get('/products/categories', [\App\Http\Controllers\API\MarketplaceController::class, 'categories']);
-    Route::get('/products/{id}', [\App\Http\Controllers\API\MarketplaceController::class, 'show']);
-    Route::post('/products/{id}/purchase', [\App\Http\Controllers\API\MarketplaceController::class, 'purchase']);
-    Route::post('/products', [\App\Http\Controllers\API\MarketplaceController::class, 'store']);
-    Route::get('/products/my-products', [\App\Http\Controllers\API\MarketplaceController::class, 'myProducts']);
-    Route::put('/products/{id}', [\App\Http\Controllers\API\MarketplaceController::class, 'update']);
-    Route::delete('/products/{id}', [\App\Http\Controllers\API\MarketplaceController::class, 'destroy']);
-    Route::get('/products/purchase-history', [\App\Http\Controllers\API\MarketplaceController::class, 'purchaseHistory']);
-    Route::get('/products/sales-history', [\App\Http\Controllers\API\MarketplaceController::class, 'salesHistory']);
-    
-    // Product routes (new)
-    Route::get('/products-new', [\App\Http\Controllers\API\ProductController::class, 'index']);
-    Route::get('/products-new/categories', [\App\Http\Controllers\API\ProductController::class, 'categories']);
-    Route::get('/products-new/{id}', [\App\Http\Controllers\API\ProductController::class, 'show']);
-    Route::post('/products-new', [\App\Http\Controllers\API\ProductController::class, 'store']);
-    Route::get('/products-new/my-products', [\App\Http\Controllers\API\ProductController::class, 'myProducts']);
-    Route::put('/products-new/{id}', [\App\Http\Controllers\API\ProductController::class, 'update']);
-    Route::delete('/products-new/{id}', [\App\Http\Controllers\API\ProductController::class, 'destroy']);
+    // Product routes
+    Route::get('/products', [\App\Http\Controllers\API\ProductController::class, 'index']);
+    Route::get('/products/categories', [\App\Http\Controllers\API\ProductController::class, 'categories']);
+    Route::get('/products/{id}', [\App\Http\Controllers\API\ProductController::class, 'show']);
+    Route::post('/products', [\App\Http\Controllers\API\ProductController::class, 'store']);
+    Route::get('/products/my-products', [\App\Http\Controllers\API\ProductController::class, 'myProducts']);
+    Route::put('/products/{id}', [\App\Http\Controllers\API\ProductController::class, 'update']);
+    Route::delete('/products/{id}', [\App\Http\Controllers\API\ProductController::class, 'destroy']);
     
     // Course routes
     Route::get('/courses/my-enrollments', [\App\Http\Controllers\API\CourseController::class, 'myEnrollments']);
@@ -185,4 +139,10 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/transactions/export', [\App\Http\Controllers\API\TransactionController::class, 'export']);
     
     // Support options routes (admin only)
+    
+    // User profile routes
+    Route::get('/user/profile', [\App\Http\Controllers\API\UserProfileController::class, 'index']);
+    Route::get('/user/withdrawal-status', [\App\Http\Controllers\API\UserProfileController::class, 'getWithdrawalStatus']);
+    Route::put('/user/profile', [\App\Http\Controllers\API\UserProfileController::class, 'updateProfile']);
+    Route::post('/user/bank-account/bind', [\App\Http\Controllers\API\UserProfileController::class, 'bindBankAccount']);
 });

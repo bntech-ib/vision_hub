@@ -49,6 +49,8 @@ class GlobalSetting extends Model
      */
     public static function isWithdrawalEnabled(): bool
     {
-        return (bool) self::get('withdrawal_enabled', true);
+        $value = self::get('withdrawal_enabled', true);
+        // Ensure we always return a boolean value
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 }

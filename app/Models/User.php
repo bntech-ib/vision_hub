@@ -27,6 +27,11 @@ use App\Models\Transaction;
 use App\Models\UserPackage;
 use App\Models\SecurityLog;
 use App\Models\AccessKey;
+use App\Models\CourseEnrollment;
+use App\Models\ReferralBonus;
+use App\Models\WithdrawalRequest;
+use App\Models\BrainTeaserAttempt;
+use App\Models\SponsoredPost;
 
 class User extends Authenticatable
 {
@@ -50,12 +55,19 @@ class User extends Authenticatable
         'current_package_id',
         'package_expires_at',
         'wallet_balance',
+        'referral_earnings',
         'is_admin',
         'two_factor_enabled',
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
-        'referred_by'
+        'referred_by',
+        // Bank account fields
+        'bank_account_holder_name',
+        'bank_account_number',
+        'bank_name',
+        'bank_branch',
+        'bank_routing_number'
     ];
 
     /**
@@ -68,6 +80,12 @@ class User extends Authenticatable
         'remember_token',
         'two_factor_secret',
         'two_factor_recovery_codes',
+        // Hide bank account details for security
+        'bank_account_number',
+        'bank_routing_number',
+        'bank_account_holder_name',
+        'bank_name',
+        'bank_branch'
     ];
 
     /**
@@ -82,11 +100,209 @@ class User extends Authenticatable
             'password' => 'hashed',
             'package_expires_at' => 'datetime',
             'wallet_balance' => 'decimal:2',
+            'referral_earnings' => 'decimal:2',
             'is_admin' => 'boolean',
             'two_factor_enabled' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_recovery_codes' => 'array',
+            'bank_account_verified' => 'boolean',
+            'bank_account_bound_at' => 'datetime'
         ];
+    }
+
+    /**
+     * Get the decrypted bank account holder name.
+     *
+     * @return string|null
+     */
+    public function getBankAccountHolderNameAttribute($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+        
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Exception $e) {
+            // If decryption fails, return the encrypted value
+            return $value;
+        }
+    }
+
+    /**
+     * Get the decrypted bank account number.
+     *
+     * @return string|null
+     */
+    public function getBankAccountNumberAttribute($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+        
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Exception $e) {
+            // If decryption fails, return the encrypted value
+            return $value;
+        }
+    }
+
+    /**
+     * Get the decrypted bank name.
+     *
+     * @return string|null
+     */
+    public function getBankNameAttribute($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+        
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Exception $e) {
+            // If decryption fails, return the encrypted value
+            return $value;
+        }
+    }
+
+    /**
+     * Get the decrypted bank branch.
+     *
+     * @return string|null
+     */
+    public function getBankBranchAttribute($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+        
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Exception $e) {
+            // If decryption fails, return the encrypted value
+            return $value;
+        }
+    }
+
+    /**
+     * Get the decrypted bank routing number.
+     *
+     * @return string|null
+     */
+    public function getBankRoutingNumberAttribute($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+        
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Exception $e) {
+            // If decryption fails, return the encrypted value
+            return $value;
+        }
+    }
+    
+    /**
+     * Get bank account details for admin display
+     * This method safely exposes decrypted bank account information for admin use
+     *
+     * @return array
+     */
+    public function getAdminBankAccountDetails(): array
+    {
+        return [
+            'bank_account_holder_name' => $this->bank_account_holder_name,
+            'bank_account_number' => $this->bank_account_number,
+            'bank_name' => $this->bank_name,
+            'bank_branch' => $this->bank_branch,
+            'bank_routing_number' => $this->bank_routing_number,
+            'bank_account_bound_at' => $this->bank_account_bound_at,
+            'has_bound_bank_account' => $this->hasBoundBankAccount(),
+        ];
+    }
+    
+    /**
+     * Get the last login time for the user
+     *
+     * @return \Illuminate\Support\Carbon|null
+     */
+    public function getLastLoginAtAttribute()
+    {
+        $lastLogin = SecurityLog::where('user_id', $this->id)
+            ->where('action', 'login_successful')
+            ->orderBy('created_at', 'desc')
+            ->first();
+            
+        return $lastLogin ? $lastLogin->created_at : null;
+    }
+    
+    /**
+     * Check if the user is active (logged in within the last 30 days)
+     *
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        $lastLoginAt = $this->last_login_at;
+        return $lastLoginAt && $lastLoginAt->gte(now()->subDays(30));
+    }
+    
+    /**
+     * Set the encrypted bank account holder name.
+     *
+     * @param  string|null  $value
+     * @return void
+     */
+    public function setBankAccountHolderNameAttribute($value)
+    {
+        $this->attributes['bank_account_holder_name'] = $value !== null ? Crypt::encryptString($value) : null;
+    }
+
+    /**
+     * Set the encrypted bank account number.
+     *
+     * @param  string|null  $value
+     * @return void
+     */
+    public function setBankAccountNumberAttribute($value)
+    {
+        $this->attributes['bank_account_number'] = $value !== null ? Crypt::encryptString($value) : null;
+    }
+
+    /**
+     * Set the encrypted bank name.
+     *
+     * @param  string|null  $value
+     * @return void
+     */
+    public function setBankNameAttribute($value)
+    {
+        $this->attributes['bank_name'] = $value !== null ? Crypt::encryptString($value) : null;
+    }
+
+    /**
+     * Set the encrypted bank branch.
+     *
+     * @param  string|null  $value
+     * @return void
+     */
+    public function setBankBranchAttribute($value)
+    {
+        $this->attributes['bank_branch'] = $value !== null ? Crypt::encryptString($value) : null;
+    }
+
+    /**
+     * Set the encrypted bank routing number.
+     *
+     * @param  string|null  $value
+     * @return void
+     */
+    public function setBankRoutingNumberAttribute($value)
+    {
+        $this->attributes['bank_routing_number'] = $value !== null ? Crypt::encryptString($value) : null;
     }
 
     /**
@@ -202,154 +418,21 @@ class User extends Authenticatable
     }
 
     /**
-     * Get referral bonuses earned by this user
+     * Get user's access keys
      */
-    public function referralBonuses(): HasMany
+    public function accessKeys(): HasMany
     {
-        return $this->hasMany(ReferralBonus::class, 'referrer_id');
+        return $this->hasMany(AccessKey::class);
     }
-
+    
     /**
-     * Get the referral bonus record for this user (if this user was referred)
-     */
-    public function referralBonus(): HasOne
-    {
-        return $this->hasOne(ReferralBonus::class, 'referred_user_id');
-    }
-
-    /**
-     * Get access keys created by this user (admin only)
+     * Get access keys created by this user
      */
     public function createdAccessKeys(): HasMany
     {
         return $this->hasMany(AccessKey::class, 'created_by');
     }
-
-    /**
-     * Get sponsored posts created by this user
-     */
-    public function sponsoredPosts(): HasMany
-    {
-        return $this->hasMany(SponsoredPost::class);
-    }
-
-    /**
-     * Get users referred by this user
-     */
-    public function referrals(): HasMany
-    {
-        return $this->hasMany(User::class, 'referred_by');
-    }
-
-    /**
-     * Get the user who referred this user
-     */
-    public function referredBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'referred_by');
-    }
-
-    /**
-     * Get level 1 referrals (direct referrals)
-     */
-    public function referralsLevel1(): HasMany
-    {
-        return $this->hasMany(User::class, 'referred_by');
-    }
-
-    /**
-     * Get level 2 referrals (indirect referrals)
-     */
-    public function referralsLevel2()
-    {
-        return User::whereIn('referred_by', $this->referralsLevel1->pluck('id'));
-    }
-
-    /**
-     * Get level 3 referrals (second indirect referrals)
-     */
-    public function referralsLevel3()
-    {
-        $level2Ids = $this->referralsLevel2()->pluck('id');
-        return User::whereIn('referred_by', $level2Ids);
-    }
-
-    /**
-     * Get all referrals up to 3 levels deep
-     * 
-     * @return array{
-     *     level1: \Illuminate\Database\Eloquent\Collection,
-     *     level2: \Illuminate\Database\Eloquent\Collection,
-     *     level3: \Illuminate\Database\Eloquent\Collection
-     * }
-     */
-    public function getAllReferrals()
-    {
-        $level1 = $this->referralsLevel1;
-        $level2 = $this->referralsLevel2()->get();
-        $level3 = $this->referralsLevel3()->get();
-
-        return [
-            'level1' => $level1,
-            'level2' => $level2,
-            'level3' => $level3,
-        ];
-    }
-
-    /**
-     * Get referral statistics
-     * 
-     * @return array{
-     *     level1_count: int,
-     *     level2_count: int,
-     *     level3_count: int,
-     *     total_count: int
-     * }
-     */
-    public function getReferralStats()
-    {
-        $referrals = $this->getAllReferrals();
-        
-        return [
-            'level1_count' => $referrals['level1']->count(),
-            'level2_count' => $referrals['level2']->count(),
-            'level3_count' => $referrals['level3']->count(),
-            'total_count' => $referrals['level1']->count() + $referrals['level2']->count() + $referrals['level3']->count(),
-        ];
-    }
-
-    /**
-     * Get referral earnings by level
-     * 
-     * @return array{
-     *     level1: float,
-     *     level2: float,
-     *     level3: float,
-     *     total: float
-     * }
-     */
-    public function getReferralEarningsByLevel()
-    {
-        $level1Earnings = $this->referralBonuses()->where('level', 1)->sum('amount');
-        $level2Earnings = $this->referralBonuses()->where('level', 2)->sum('amount');
-        $level3Earnings = $this->referralBonuses()->where('level', 3)->sum('amount');
-        
-        return [
-            'level1' => $level1Earnings,
-            'level2' => $level2Earnings,
-            'level3' => $level3Earnings,
-            'total' => $level1Earnings + $level2Earnings + $level3Earnings,
-        ];
-    }
-
-    /**
-     * Check if user is admin
-     */
-    public function isAdmin(): bool
-    {
-        return $this->is_admin === true;
-    }
-
+    
     /**
      * Check if user has active package
      */
@@ -372,11 +455,28 @@ class User extends Authenticatable
     }
 
     /**
-     * Add to wallet balance
+     * Add to wallet balance (normal earnings)
      */
     public function addToWallet(float $amount): void
     {
         $this->increment('wallet_balance', $amount);
+    }
+
+    /**
+     * Add to referral earnings
+     */
+    public function addToReferralEarnings(float $amount): void
+    {
+        $this->increment('referral_earnings', $amount);
+    }
+
+    /**
+     * Add to both wallet balance and referral earnings
+     */
+    public function addToWalletAndReferralEarnings(float $walletAmount, float $referralAmount): void
+    {
+        $this->increment('wallet_balance', $walletAmount);
+        $this->increment('referral_earnings', $referralAmount);
     }
 
     /**
@@ -389,6 +489,42 @@ class User extends Authenticatable
             return true;
         }
         return false;
+    }
+
+    /**
+     * Deduct from referral earnings
+     */
+    public function deductFromReferralEarnings(float $amount): bool
+    {
+        if ($this->referral_earnings >= $amount) {
+            $this->decrement('referral_earnings', $amount);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get total earnings (wallet + referral earnings)
+     */
+    public function getTotalEarnings(): float
+    {
+        return (float) $this->wallet_balance + (float) $this->referral_earnings;
+    }
+
+    /**
+     * Get normal earnings (wallet balance)
+     */
+    public function getNormalEarnings(): float
+    {
+        return (float) $this->wallet_balance;
+    }
+
+    /**
+     * Get referral earnings
+     */
+    public function getReferralEarnings(): float
+    {
+        return (float) $this->referral_earnings;
     }
 
     /**
@@ -492,7 +628,77 @@ class User extends Authenticatable
     {
         return $this->hasMany(SecurityLog::class);
     }
-
+    
+    /**
+     * Get users referred by this user
+     */
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+    
+    /**
+     * Get the user who referred this user
+     */
+    public function referredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+    
+    /**
+     * Get referral statistics
+     */
+    public function getReferralStats(): array
+    {
+        $level1Count = $this->referrals()->count();
+        $level2Count = 0;
+        $level3Count = 0;
+        
+        // Get level 2 referrals (referrals of referrals)
+        $level1Referrals = $this->referrals()->pluck('id');
+        if ($level1Referrals->isNotEmpty()) {
+            $level2Count = User::whereIn('referred_by', $level1Referrals)->count();
+            
+            // Get level 3 referrals
+            $level2Referrals = User::whereIn('referred_by', $level1Referrals)->pluck('id');
+            if ($level2Referrals->isNotEmpty()) {
+                $level3Count = User::whereIn('referred_by', $level2Referrals)->count();
+            }
+        }
+        
+        return [
+            'level1_count' => $level1Count,
+            'level2_count' => $level2Count,
+            'level3_count' => $level3Count,
+            'total_count' => $level1Count + $level2Count + $level3Count,
+        ];
+    }
+    
+    /**
+     * Get referral earnings by level
+     */
+    public function getReferralEarningsByLevel(): array
+    {
+        $level1Earnings = ReferralBonus::where('referrer_id', $this->id)
+            ->where('level', 1)
+            ->sum('amount');
+            
+        $level2Earnings = ReferralBonus::where('referrer_id', $this->id)
+            ->where('level', 2)
+            ->sum('amount');
+            
+        $level3Earnings = ReferralBonus::where('referrer_id', $this->id)
+            ->where('level', 3)
+            ->sum('amount');
+            
+        return [
+            'level1' => $level1Earnings,
+            'level2' => $level2Earnings,
+            'level3' => $level3Earnings,
+            'total' => $level1Earnings + $level2Earnings + $level3Earnings,
+        ];
+    }
+    
     /**
      * Log a security event
      */
@@ -512,29 +718,53 @@ class User extends Authenticatable
     }
     
     /**
-     * Check if user has reached their ad view limit
+     * Check if user has reached their daily ad interaction limit
      */
-    public function hasReachedAdViewLimit(): bool
+    public function hasReachedDailyAdInteractionLimit(): bool
     {
-        // If user doesn't have an active package, they can view ads
+        // If user doesn't have an active package, they can interact with ads
         if (!$this->hasActivePackage()) {
             return false;
         }
         
         // If ad_views_limit is 0 or null, it means unlimited
-        $adViewLimit = $this->currentPackage->ad_views_limit;
-        if (!$adViewLimit || $adViewLimit == 0) {
+        $adInteractionLimit = $this->currentPackage->ad_views_limit;
+        if (!$adInteractionLimit || $adInteractionLimit == 0) {
             return false;
         }
         
-        // Count ad views for the current month
-        $adViewsThisMonth = $this->adInteractions()
+        // Count ad interactions for the current day
+        $adInteractionsToday = $this->adInteractions()
             ->where('type', 'view')
-            ->whereMonth('interacted_at', now()->month)
-            ->whereYear('interacted_at', now()->year)
+            ->whereDate('interacted_at', now()->toDateString())
             ->count();
             
-        return $adViewsThisMonth >= $adViewLimit;
+        return $adInteractionsToday >= $adInteractionLimit;
+    }
+    
+    /**
+     * Get the number of ad interactions remaining for today
+     */
+    public function getRemainingDailyAdInteractions(): int
+    {
+        // If user doesn't have an active package, they have unlimited interactions
+        if (!$this->hasActivePackage()) {
+            return PHP_INT_MAX; // Unlimited
+        }
+        
+        // If ad_views_limit is 0 or null, it means unlimited
+        $adInteractionLimit = $this->currentPackage->ad_views_limit;
+        if (!$adInteractionLimit || $adInteractionLimit == 0) {
+            return PHP_INT_MAX; // Unlimited
+        }
+        
+        // Count ad interactions for the current day
+        $adInteractionsToday = $this->adInteractions()
+            ->where('type', 'view')
+            ->whereDate('interacted_at', now()->toDateString())
+            ->count();
+            
+        return max(0, $adInteractionLimit - $adInteractionsToday);
     }
     
     /**
@@ -561,6 +791,14 @@ class User extends Authenticatable
     }
     
     /**
+     * Check if the user is an administrator
+     */
+    public function isAdmin(): bool
+    {
+        return $this->is_admin === true;
+    }
+    
+    /**
      * Get available ads for the user based on their package limit
      */
     public function getAvailableAdsQuery()
@@ -573,20 +811,17 @@ class User extends Authenticatable
                   ->orWhere('end_date', '>=', now());
             });
             
-        // If user has an active package with ad view limit
-        if ($this->hasActivePackage() && $this->currentPackage->ad_views_limit > 0) {
-            // Previously, we filtered out ads that the user had already viewed
-            // But now we want to show all ads, even those already viewed
-            // So we're removing the filtering logic that excluded viewed ads
+        // Exclude ads that the user has already interacted with (viewed or clicked)
+        $interactedAdIds = $this->adInteractions()
+            ->pluck('advertisement_id');
             
-            // The following code was removed:
-            // $viewedAdIds = $this->adInteractions()
-            //     ->where('type', 'view')
-            //     ->pluck('advertisement_id');
-            //     
-            // if ($viewedAdIds->isNotEmpty()) {
-            //     $query->whereNotIn('id', $viewedAdIds);
-            // }
+        if ($interactedAdIds->isNotEmpty()) {
+            $query->whereNotIn('id', $interactedAdIds);
+        }
+        
+        // Limit the number of ads based on package ad_limits
+        if ($this->hasActivePackage() && $this->currentPackage->ad_limits > 0) {
+            $query->limit($this->currentPackage->ad_limits);
         }
         
         return $query;
@@ -615,5 +850,124 @@ class User extends Authenticatable
         }
         
         return $query;
+    }
+
+    /**
+     * Get level 1 referrals (direct referrals)
+     */
+    public function referralsLevel1(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    /**
+     * Get level 2 referrals (referrals of referrals)
+     */
+    public function referralsLevel2(): HasMany
+    {
+        // Get IDs of level 1 referrals
+        $level1Ids = $this->referrals()->pluck('id');
+        
+        return $this->hasMany(User::class, 'referred_by')->whereIn('referred_by', $level1Ids);
+    }
+
+    /**
+     * Get level 3 referrals (referrals of referrals of referrals)
+     */
+    public function referralsLevel3(): HasMany
+    {
+        // Get IDs of level 1 referrals
+        $level1Ids = $this->referrals()->pluck('id');
+        
+        // Get IDs of level 2 referrals
+        $level2Ids = User::whereIn('referred_by', $level1Ids)->pluck('id');
+        
+        return $this->hasMany(User::class, 'referred_by')->whereIn('referred_by', $level2Ids);
+    }
+
+    /**
+     * Get sponsored posts created by this user
+     */
+    public function sponsoredPosts(): HasMany
+    {
+        return $this->hasMany(SponsoredPost::class);
+    }
+
+    /**
+     * Check if user has bound their bank account
+     */
+    public function hasBoundBankAccount(): bool
+    {
+        return !is_null($this->bank_account_bound_at);
+    }
+
+    /**
+     * Bind bank account details to the user
+     * This can only be done once
+     */
+    public function bindBankAccount(array $bankDetails): bool
+    {
+        // Check if bank account is already bound
+        if ($this->hasBoundBankAccount()) {
+            return false;
+        }
+
+        // Validate required bank account details
+        $requiredFields = ['bank_account_holder_name', 'bank_account_number', 'bank_name'];
+        foreach ($requiredFields as $field) {
+            if (empty($bankDetails[$field])) {
+                return false;
+            }
+        }
+
+        // Encrypt sensitive bank account details before saving
+        $this->forceFill([
+            'bank_account_holder_name' => Crypt::encryptString($bankDetails['bank_account_holder_name']),
+            'bank_account_number' => Crypt::encryptString($bankDetails['bank_account_number']),
+            'bank_name' => Crypt::encryptString($bankDetails['bank_name']),
+            'bank_branch' => !empty($bankDetails['bank_branch']) ? Crypt::encryptString($bankDetails['bank_branch']) : null,
+            'bank_routing_number' => !empty($bankDetails['bank_routing_number']) ? Crypt::encryptString($bankDetails['bank_routing_number']) : null,
+            'bank_account_bound_at' => now()
+        ])->save();
+
+        return true;
+    }
+
+    /**
+     * Override the fill method to prevent updating bank account details once bound
+     */
+    public function fill(array $attributes)
+    {
+        // If bank account is already bound, remove bank account fields from attributes
+        if ($this->hasBoundBankAccount()) {
+            unset(
+                $attributes['bank_account_holder_name'],
+                $attributes['bank_account_number'],
+                $attributes['bank_name'],
+                $attributes['bank_branch'],
+                $attributes['bank_routing_number']
+            );
+        }
+
+        return parent::fill($attributes);
+    }
+
+    /**
+     * Override the update method to prevent updating bank account details once bound
+     */
+    public function update(array $attributes = [], array $options = [])
+    {
+        // If bank account is already bound, remove bank account fields from attributes
+        if ($this->hasBoundBankAccount()) {
+            unset(
+                $attributes['bank_account_holder_name'],
+                $attributes['bank_account_number'],
+                $attributes['bank_name'],
+                $attributes['bank_branch'],
+                $attributes['bank_routing_number']
+            );
+        }
+
+        return parent::update($attributes, $options);
     }
 }

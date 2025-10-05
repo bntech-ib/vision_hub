@@ -18,6 +18,7 @@ class AccessKey extends Model
         'used_by',
         'expires_at',
         'is_active',
+        'is_used',
         'usage_limit',
         'usage_count'
     ];
@@ -119,6 +120,7 @@ class AccessKey extends Model
     {
         return $this->is_active && 
                !$this->isExpired() && 
+               !$this->is_used &&
                ($this->usage_limit === null || $this->usage_count < $this->usage_limit);
     }
 

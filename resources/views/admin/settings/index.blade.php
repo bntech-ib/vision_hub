@@ -54,7 +54,7 @@
                     <h5 class="mb-0">General Settings</h5>
                 </div>
                 <div class="card-body">
-                    <form id="general-settings-form" method="POST" action="{{ route('admin.settings.update.general') }}" enctype="multipart/form-data">
+                    <form id="general-settings-form" method="POST" action="{{ route('admin.settings.general.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         
@@ -126,7 +126,7 @@
                     <h5 class="mb-0">Email Settings</h5>
                 </div>
                 <div class="card-body">
-                    <form id="email-settings-form" method="POST" action="{{ route('admin.settings.update.email') }}">
+                    <form id="email-settings-form" method="POST" action="{{ route('admin.settings.email.update') }}">
                         @csrf
                         @method('PUT')
                         
@@ -218,7 +218,7 @@
                     <h5 class="mb-0">Storage Settings</h5>
                 </div>
                 <div class="card-body">
-                    <form id="storage-settings-form" method="POST" action="{{ route('admin.settings.update.storage') }}">
+                    <form id="storage-settings-form" method="POST" action="{{ route('admin.settings.storage.update') }}">
                         @csrf
                         @method('PUT')
                         
@@ -307,7 +307,7 @@
                     <h5 class="mb-0">Processing Settings</h5>
                 </div>
                 <div class="card-body">
-                    <form id="processing-settings-form" method="POST" action="{{ route('admin.settings.update.processing') }}">
+                    <form id="processing-settings-form" method="POST" action="{{ route('admin.settings.processing.update') }}">
                         @csrf
                         @method('PUT')
                         
@@ -390,7 +390,7 @@
                     <h5 class="mb-0">Security Settings</h5>
                 </div>
                 <div class="card-body">
-                    <form id="security-settings-form" method="POST" action="{{ route('admin.settings.update.security') }}">
+                    <form id="security-settings-form" method="POST" action="{{ route('admin.settings.security.update') }}">
                         @csrf
                         @method('PUT')
                         
@@ -475,7 +475,7 @@
                     <h5 class="mb-0">Notification Settings</h5>
                 </div>
                 <div class="card-body">
-                    <form id="notifications-settings-form" method="POST" action="{{ route('admin.settings.update.notifications') }}">
+                    <form id="notifications-settings-form" method="POST" action="{{ route('admin.settings.notifications.update') }}">
                         @csrf
                         @method('PUT')
                         
@@ -583,47 +583,60 @@
                     <h5 class="mb-0">Financial Settings</h5>
                 </div>
                 <div class="card-body">
-                    <form id="financial-settings-form" method="POST" action="{{ route('admin.settings.update.financial') }}">
+                    <form id="financial-settings-form" method="POST" action="{{ route('admin.settings.financial.update') }}">
                         @csrf
-                        @method('PUT')
                         
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="card border-primary">
                                     <div class="card-header bg-primary text-white">
-                                        <h6 class="mb-0">Withdrawal Settings</h6>
+                                        <h6 class="mb-0">Withdrawal Portal Control</h6>
                                     </div>
                                     <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <h5>Portal Status Control</h5>
+                                            <p>Use this setting to globally enable or disable withdrawal requests for all users.</p>
+                                            <ul>
+                                                <li><strong>Enabled:</strong> Users can submit withdrawal requests</li>
+                                                <li><strong>Disabled:</strong> Users cannot submit withdrawal requests (portal closed)</li>
+                                            </ul>
+                                        </div>
+                                        
                                         <div class="mb-3">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="withdrawal_enabled" name="withdrawal_enabled" {{ \App\Models\GlobalSetting::isWithdrawalEnabled() ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="withdrawal_enabled">
-                                                    Enable Withdrawals Globally
+                                            <div class="form-check form-switch form-switch-lg d-flex align-items-center">
+                                                <input class="form-check-input me-2" type="checkbox" id="withdrawal_enabled" name="withdrawal_enabled" {{ \App\Models\GlobalSetting::isWithdrawalEnabled() ? 'checked' : '' }} style="transform: scale(1.5);">
+                                                <label class="form-check-label fw-bold" for="withdrawal_enabled">
+                                                    <span class="withdrawal-status">
+                                                        @if(\App\Models\GlobalSetting::isWithdrawalEnabled())
+                                                            <span class="text-success"><i class="bi bi-unlock"></i> Withdrawals OPEN</span>
+                                                        @else
+                                                            <span class="text-danger"><i class="bi bi-lock"></i> Withdrawals CLOSED</span>
+                                                        @endif
+                                                    </span>
                                                 </label>
                                             </div>
-                                            <div class="form-text">
-                                                When disabled, all users will be prevented from making withdrawal requests.
+                                            <div class="form-text mt-2">
+                                                When disabled, all users will be prevented from making withdrawal requests. The portal is currently 
+                                                <strong class="portal-status">{{ \App\Models\GlobalSetting::isWithdrawalEnabled() ? 'OPEN' : 'CLOSED' }}</strong> for withdrawals.
                                             </div>
                                         </div>
                                         
                                         <div class="d-flex gap-2">
                                             @if(\App\Models\GlobalSetting::isWithdrawalEnabled())
-                                                <form action="{{ route('admin.settings.disable-withdrawal') }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <button type="submit" class="btn btn-warning">
-                                                        <i class="bi bi-x-circle"></i> Disable Withdrawals
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-danger btn-lg" id="toggle-withdrawal-btn" data-action="disable">
+                                                    <i class="bi bi-x-circle"></i> Close Withdrawal Portal
+                                                </button>
                                             @else
-                                                <form action="{{ route('admin.settings.enable-withdrawal') }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <button type="submit" class="btn btn-success">
-                                                        <i class="bi bi-check-circle"></i> Enable Withdrawals
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-success btn-lg" id="toggle-withdrawal-btn" data-action="enable">
+                                                    <i class="bi bi-check-circle"></i> Open Withdrawal Portal
+                                                </button>
                                             @endif
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <small class="text-muted">
+                                                <i class="bi bi-info-circle"></i> Note: Changes take effect immediately for all users.
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -761,6 +774,56 @@
                 $('.mailgun-settings').show();
             }
         }).trigger('change');
+        
+        // Handle withdrawal portal toggle
+        $('#toggle-withdrawal-btn').on('click', function() {
+            var btn = $(this);
+            var action = btn.data('action');
+            var originalText = btn.html();
+            
+            btn.prop('disabled', true).html('<i class="bi bi-arrow-repeat spinner-border spinner-border-sm"></i> Processing...');
+            
+            var url = action === 'enable' ? "{{ route('admin.settings.enable-withdrawal') }}" : "{{ route('admin.settings.disable-withdrawal') }}";
+            
+            $.ajax({
+                url: url,
+                method: 'PUT',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Toggle the button
+                        if (action === 'enable') {
+                            btn.removeClass('btn-success').addClass('btn-danger')
+                               .html('<i class="bi bi-x-circle"></i> Close Withdrawal Portal')
+                               .data('action', 'disable');
+                            $('.withdrawal-status').html('<span class="text-success"><i class="bi bi-unlock"></i> Withdrawals OPEN</span>');
+                            $('.portal-status').html('<strong>OPEN</strong>');
+                        } else {
+                            btn.removeClass('btn-danger').addClass('btn-success')
+                               .html('<i class="bi bi-check-circle"></i> Open Withdrawal Portal')
+                               .data('action', 'enable');
+                            $('.withdrawal-status').html('<span class="text-danger"><i class="bi bi-lock"></i> Withdrawals CLOSED</span>');
+                            $('.portal-status').html('<strong>CLOSED</strong>');
+                        }
+                        showAlert('success', response.message);
+                    } else {
+                        showAlert('error', response.message || 'An error occurred');
+                    }
+                },
+                error: function(xhr) {
+                    var errorMsg = 'An error occurred while processing request';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    showAlert('error', errorMsg);
+                },
+                complete: function() {
+                    btn.prop('disabled', false);
+                }
+            });
+        });
         
         $('#default_disk').on('change', function() {
             $('.s3-settings').hide();

@@ -34,6 +34,7 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->sum('amount'),
             'availableBalance' => (int)$user->wallet_balance,
+            'referralEarnings' => (int)$user->referral_earnings,
             'pendingEarnings' => (int)$user->transactions()
                 ->where('type', 'earning')
                 ->where('status', 'pending')
@@ -67,13 +68,14 @@ class DashboardController extends Controller
      */
     public function earnings(Request $request): JsonResponse
     {
+        /** @var User $user */
         $user = Auth::user();
         $limit = $request->get('limit', 10);
         $page = $request->get('page', 1);
 
         // Get earnings transactions
         $earningsQuery = $user->transactions()
-            ->where('type', 'earning')
+            ->whereIn('type', ['earning', 'referral_earning'])
             ->where('status', 'completed')
             ->orderBy('created_at', 'desc');
 
@@ -87,6 +89,7 @@ class DashboardController extends Controller
             return [
                 'id' => (string)$transaction->id,
                 'amount' => (int)$transaction->amount,
+                'type' => $transaction->type, // 'earning' or 'referral_earning'
                 'source' => $this->getTransactionSource($transaction),
                 'description' => $transaction->description,
                 'date' => $transaction->created_at->toISOString()
@@ -96,7 +99,12 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'earnings' => $earningsData
+                'earnings' => $earningsData,
+                'summary' => [
+                    'normalEarnings' => (int)$user->getNormalEarnings(),
+                    'referralEarnings' => (int)$user->getReferralEarnings(),
+                    'totalEarnings' => (int)$user->getTotalEarnings()
+                ]
             ],
             'meta' => [
                 'pagination' => [

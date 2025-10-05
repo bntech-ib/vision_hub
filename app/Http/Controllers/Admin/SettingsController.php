@@ -382,19 +382,25 @@ class SettingsController extends Controller
     /**
      * Update financial settings
      */
-    public function updateFinancial(Request $request): JsonResponse
+    public function updateFinancial(Request $request)
     {
         $validated = $request->validate([
-            'withdrawal_enabled' => 'boolean'
+            'withdrawal_enabled' => 'required|boolean'
         ]);
 
         // Save withdrawal setting
-        \App\Models\GlobalSetting::set('withdrawal_enabled', $validated['withdrawal_enabled'] ?? false);
+        \App\Models\GlobalSetting::set('withdrawal_enabled', $validated['withdrawal_enabled']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Financial settings updated successfully'
-        ]);
+        // Check if this is an AJAX request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Financial settings updated successfully'
+            ]);
+        }
+
+        // For web requests, redirect back with success message
+        return redirect()->back()->with('success', 'Financial settings updated successfully');
     }
 
     /**

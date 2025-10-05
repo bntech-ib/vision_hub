@@ -105,6 +105,18 @@
                     </div>
                 </div>
                 
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="referral_earnings" class="form-label">Referral Earnings (₦)</label>
+                            <input type="number" step="0.01" class="form-control" id="referral_earnings" name="referral_earnings" value="{{ old('referral_earnings', $user->referral_earnings) }}">
+                            @error('referral_earnings')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="mb-3">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="is_admin" name="is_admin" value="1" {{ old('is_admin', $user->is_admin) ? 'checked' : '' }}>
