@@ -58,7 +58,7 @@ class AuthController extends Controller
             'referral_code' => strtoupper(Str::random(6)), // Generate unique referral code
             'current_package_id' => $accessKey->package_id,
             'package_expires_at' => $accessKey->package->duration_days ? 
-                now()->addDays($accessKey->package->duration_days) : null,
+                now()->addDays((int) $accessKey->package->duration_days) : null,
             'referred_by' => $referrer ? $referrer->id : null,
         ]);
 
@@ -155,6 +155,20 @@ class AuthController extends Controller
                     ]);
                 }
             }
+        }
+
+        // Award welcome bonus from the package to new user
+        $packageWelcomeBonus = (float) $accessKey->package->welcome_bonus ?? 0;
+        if ($packageWelcomeBonus > 0) {
+            $user->addToWelcomeBonus($packageWelcomeBonus);
+            
+            // Log the welcome bonus transaction
+            $user->transactions()->create([
+                'amount' => $packageWelcomeBonus,
+                'type' => 'welcome_bonus',
+                'description' => 'Welcome bonus from ' . $accessKey->package->name . ' package',
+                'status' => 'completed',
+            ]);
         }
 
         // Create API token

@@ -45,6 +45,12 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="welcome_bonus" class="form-label">Welcome Bonus ($)</label>
+                        <input type="number" class="form-control" id="welcome_bonus" name="welcome_bonus" step="0.01" min="0" value="0">
+                        <div class="form-text">Welcome bonus amount for new users subscribing to this package</div>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="features" class="form-label">Features (comma separated)</label>
                         <input type="text" class="form-control" id="features" name="features" placeholder="feature1, feature2, feature3">
                         <div class="form-text">Enter features separated by commas. Leave empty for no features.</div>
@@ -115,6 +121,7 @@
                     <li>Each package must have a unique name</li>
                     <li>Price is in USD</li>
                     <li>Duration determines how long the package is valid</li>
+                    <li>Welcome bonus is awarded to new users upon registration</li>
                     <li>Features can be enabled/disabled per package</li>
                     <li>Limits help control resource usage</li>
                     <li>Referral earning amount determines how much users earn from referrals</li>

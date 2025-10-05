@@ -22,6 +22,7 @@ class UserPackage extends Model
         'duration_days',
         'is_active',
         'referral_earning_percentage',
+        'welcome_bonus',
         'daily_earning_limit',
         'ad_limits'
     ];
@@ -33,6 +34,7 @@ class UserPackage extends Model
         'is_active' => 'boolean',
         'price' => 'decimal:2',
         'referral_earning_percentage' => 'decimal:2',
+        'welcome_bonus' => 'decimal:2',
         'daily_earning_limit' => 'decimal:2'
     ];
 

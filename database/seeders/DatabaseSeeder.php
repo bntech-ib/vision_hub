@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
                     'marketplace_access' => false,
                     'brain_teaser_access' => true,
                     'is_active' => true,
+                    'welcome_bonus' => 250, // Welcome bonus for Basic Plan
                 ],
                 [
                     'name' => 'Professional Plan',
@@ -49,6 +50,7 @@ class DatabaseSeeder extends Seeder
                     'marketplace_access' => true,
                     'brain_teaser_access' => true,
                     'is_active' => true,
+                    'welcome_bonus' => 500, // Welcome bonus for Professional Plan
                 ],
                 [
                     'name' => 'Enterprise Plan',
@@ -60,6 +62,7 @@ class DatabaseSeeder extends Seeder
                     'marketplace_access' => true,
                     'brain_teaser_access' => true,
                     'is_active' => true,
+                    'welcome_bonus' => 1000, // Welcome bonus for Enterprise Plan
                 ],
             ];
 
@@ -168,6 +171,8 @@ class DatabaseSeeder extends Seeder
             BrainTeaserSeeder::class,
             ProductSeeder::class,
             AdvertisementSeeder::class,
+            WelcomeBonusSettingSeeder::class,
+            PackageWelcomeBonusSeeder::class,
         ]);
 
         $this->command->info('Database seeded successfully!');

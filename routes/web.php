@@ -80,7 +80,7 @@ Route::middleware('guest')->group(function () {
             'referral_code' => strtoupper(Str::random(6)), // Generate unique referral code
             'current_package_id' => $accessKey->package_id,
             'package_expires_at' => $accessKey->package->duration_days ? 
-                now()->addDays($accessKey->package->duration_days) : null,
+                now()->addDays((int) $accessKey->package->duration_days) : null,
             'referred_by' => $referrer ? $referrer->id : null,
         ]);
 

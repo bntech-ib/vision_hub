@@ -166,6 +166,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}" href="{{ route('admin.vendors.index') }}">
+                                <i class="bi bi-shop"></i>
+                                Vendors
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.ads.*') ? 'active' : '' }}" href="{{ route('admin.ads.index') }}">
                                 <i class="bi bi-megaphone"></i>
                                 Advertisements
@@ -235,6 +241,12 @@
                             <a class="nav-link" href="{{ route('admin.system-status') }}">
                                 <i class="bi bi-activity"></i>
                                 System Status
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}" href="{{ route('admin.support.index') }}">
+                                <i class="bi bi-life-preserver"></i>
+                                Support Options
                             </a>
                         </li>
                     </ul>

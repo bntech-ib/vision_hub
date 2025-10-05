@@ -66,7 +66,8 @@ class PackageController extends Controller
             'marketplace_access' => 'boolean',
             'brain_teaser_access' => 'boolean',
             'is_active' => 'boolean',
-            'referral_earning_percentage' => 'nullable|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/'
+            'referral_earning_percentage' => 'nullable|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
+            'welcome_bonus' => 'nullable|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/'
         ]);
 
         // Convert checkbox values
@@ -150,7 +151,8 @@ class PackageController extends Controller
             'marketplace_access' => 'boolean',
             'brain_teaser_access' => 'boolean',
             'is_active' => 'boolean',
-            'referral_earning_percentage' => 'nullable|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/'
+            'referral_earning_percentage' => 'nullable|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
+            'welcome_bonus' => 'nullable|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/'
         ]);
 
         // Convert checkbox values

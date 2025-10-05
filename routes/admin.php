@@ -22,6 +22,8 @@ use App\Http\Controllers\API\TwoFactorAuthenticationController; // Added
 use App\Http\Controllers\Admin\TwoFactorAuthenticationController as AdminTwoFactorAuthenticationController; // Added for admin 2FA
 use App\Http\Controllers\Admin\ProfileController; // Added for admin profile
 use App\Http\Controllers\Admin\SecurityMonitoringController; // Added for security monitoring
+use App\Http\Controllers\Admin\SupportController; // Added for support options
+use App\Http\Controllers\Admin\VendorController; // Added for vendor management
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth; // Added for logout functionality
 
@@ -174,6 +176,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/verify', 'verify')->name('verify');
     });
     
+    // Support Options Management
+    Route::resource('support', SupportController::class);
+    
     // API Status
     Route::get('/status', [\App\Http\Controllers\ApiController::class, 'status'])->name('api.status');
     
@@ -204,6 +209,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('brain-teasers', BrainTeaserController::class);
     Route::put('brain-teasers/{brainTeaser}/suspend', [BrainTeaserController::class, 'suspend'])->name('brain-teasers.suspend');
     Route::put('brain-teasers/{brainTeaser}/activate', [BrainTeaserController::class, 'activate'])->name('brain-teasers.activate');
+    
+    // Vendor Management
+    Route::resource('vendors', VendorController::class);
+    Route::post('vendors/{vendor}/generate-access-keys', [VendorController::class, 'generateAccessKeys'])->name('vendors.generate-access-keys');
+    Route::get('vendors/{vendor}/access-keys', [VendorController::class, 'accessKeys'])->name('vendors.access-keys');
     
     // Logout Route
     Route::post('/logout', function (\Illuminate\Http\Request $request) {

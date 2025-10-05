@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,7 +45,7 @@ Route::get('/test-support-options', function () {
             'id' => $option->id,
             'title' => $option->title,
             'description' => $option->description,
-            'icon' => $option->icon,
+            'avatar' => $option->avatar ? Storage::url($option->avatar) : null,
             'whatsapp_link' => $whatsappLink,
         ];
     }
@@ -139,10 +140,20 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/transactions/export', [\App\Http\Controllers\API\TransactionController::class, 'export']);
     
     // Support options routes (admin only)
+    Route::get('/system/support-options', [\App\Http\Controllers\API\SupportOptionController::class, 'index']);
+    Route::post('/system/support-options', [\App\Http\Controllers\API\SupportOptionController::class, 'store']);
+    Route::get('/system/support-options/{support_option}', [\App\Http\Controllers\API\SupportOptionController::class, 'show']);
+    Route::put('/system/support-options/{support_option}', [\App\Http\Controllers\API\SupportOptionController::class, 'update']);
+    Route::delete('/system/support-options/{support_option}', [\App\Http\Controllers\API\SupportOptionController::class, 'destroy']);
     
     // User profile routes
     Route::get('/user/profile', [\App\Http\Controllers\API\UserProfileController::class, 'index']);
     Route::get('/user/withdrawal-status', [\App\Http\Controllers\API\UserProfileController::class, 'getWithdrawalStatus']);
     Route::put('/user/profile', [\App\Http\Controllers\API\UserProfileController::class, 'updateProfile']);
     Route::post('/user/bank-account/bind', [\App\Http\Controllers\API\UserProfileController::class, 'bindBankAccount']);
+    Route::post('/user/username-by-referral', [\App\Http\Controllers\API\UserProfileController::class, 'getUsernameByReferralCode']);
+    
+    // Vendor routes
+    Route::get('/vendor/access-keys', [\App\Http\Controllers\API\VendorController::class, 'accessKeys']);
+    Route::get('/vendor/statistics', [\App\Http\Controllers\API\VendorController::class, 'statistics']);
 });

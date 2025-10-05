@@ -81,7 +81,7 @@ class UserController extends Controller
         
         if ($validated['current_package_id']) {
             $package = UserPackage::find($validated['current_package_id']);
-            $validated['package_expires_at'] = now()->addDays($package->duration_days);
+            $validated['package_expires_at'] = now()->addDays((int) $package->duration_days);
         }
         
         User::create($validated);
@@ -155,6 +155,12 @@ class UserController extends Controller
             'is_admin' => 'boolean',
             'wallet_balance' => 'nullable|numeric|min:0',
             'referral_earnings' => 'nullable|numeric|min:0',
+            // Vendor fields
+            'make_vendor' => 'nullable|boolean',
+            'vendor_company_name' => 'nullable|string|max:255',
+            'vendor_description' => 'nullable|string',
+            'vendor_website' => 'nullable|url',
+            'vendor_commission_rate' => 'nullable|numeric|min:0|max:100',
         ]);
         
         if ($request->filled('password')) {
@@ -162,12 +168,36 @@ class UserController extends Controller
         }
         
         // Update package expiration if package changed
-        if ($validated['current_package_id'] && $user->current_package_id != $validated['current_package_id']) {
+        if (isset($validated['current_package_id']) && $user->current_package_id != $validated['current_package_id']) {
             $package = UserPackage::find($validated['current_package_id']);
-            $validated['package_expires_at'] = now()->addDays($package->duration_days);
+            $validated['package_expires_at'] = now()->addDays((int) $package->duration_days);
         }
         
         $user->update($validated);
+        
+        // Handle vendor conversion
+        if (isset($validated['make_vendor']) && $validated['make_vendor'] && !$user->isVendor()) {
+            // Validate vendor fields when making a user a vendor
+            $vendorData = $request->validate([
+                'vendor_company_name' => 'required|string|max:255',
+                'vendor_commission_rate' => 'required|numeric|min:0|max:100',
+                'vendor_description' => 'nullable|string',
+                'vendor_website' => 'nullable|url',
+            ]);
+            
+            $user->makeVendor($vendorData);
+        } 
+        // Update vendor information if user is already a vendor
+        elseif ($user->isVendor()) {
+            $vendorData = [
+                'vendor_company_name' => $validated['vendor_company_name'] ?? $user->vendor_company_name,
+                'vendor_commission_rate' => $validated['vendor_commission_rate'] ?? $user->vendor_commission_rate,
+                'vendor_description' => $validated['vendor_description'] ?? $user->vendor_description,
+                'vendor_website' => $validated['vendor_website'] ?? $user->vendor_website,
+            ];
+            
+            $user->update($vendorData);
+        }
         
         return redirect()->route('admin.users.show', $user)
             ->with('success', 'User updated successfully.');
@@ -258,7 +288,7 @@ class UserController extends Controller
         $package = UserPackage::find($validated['package_id']);
         $user->update([
             'current_package_id' => $package->id,
-            'package_expires_at' => now()->addDays($package->duration_days),
+            'package_expires_at' => now()->addDays((int) $package->duration_days),
         ]);
         
         return redirect()->back()->with('success', 'User package updated successfully.');

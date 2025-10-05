@@ -261,6 +261,27 @@ class UserProfileController extends Controller
     }
 
     /**
+     * Get user username by referral code
+     */
+    public function getUsernameByReferralCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'referral_code' => 'required|string|exists:users,referral_code',
+        ]);
+
+        $user = User::where('referral_code', $validated['referral_code'])->first();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'username' => $user->username,
+                'referral_code' => $user->referral_code,
+            ],
+            'message' => 'Username retrieved successfully',
+        ]);
+    }
+
+    /**
      * Get withdrawal status
      */
     public function getWithdrawalStatus(Request $request): JsonResponse

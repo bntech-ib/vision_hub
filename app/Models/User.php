@@ -55,8 +55,14 @@ class User extends Authenticatable
         'current_package_id',
         'package_expires_at',
         'wallet_balance',
+        'welcome_bonus',
         'referral_earnings',
         'is_admin',
+        'is_vendor',
+        'vendor_company_name',
+        'vendor_description',
+        'vendor_website',
+        'vendor_commission_rate',
         'two_factor_enabled',
         'two_factor_secret',
         'two_factor_recovery_codes',
@@ -100,8 +106,10 @@ class User extends Authenticatable
             'password' => 'hashed',
             'package_expires_at' => 'datetime',
             'wallet_balance' => 'decimal:2',
+            'welcome_bonus' => 'decimal:2',
             'referral_earnings' => 'decimal:2',
             'is_admin' => 'boolean',
+            'is_vendor' => 'boolean',
             'two_factor_enabled' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_recovery_codes' => 'array',
@@ -463,6 +471,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Add to welcome bonus
+     */
+    public function addToWelcomeBonus(float $amount): void
+    {
+        $this->increment('welcome_bonus', $amount);
+    }
+
+    /**
      * Add to referral earnings
      */
     public function addToReferralEarnings(float $amount): void
@@ -480,12 +496,33 @@ class User extends Authenticatable
     }
 
     /**
+     * Add to wallet balance and welcome bonus
+     */
+    public function addToWalletAndWelcomeBonus(float $walletAmount, float $welcomeBonusAmount): void
+    {
+        $this->increment('wallet_balance', $walletAmount);
+        $this->increment('welcome_bonus', $welcomeBonusAmount);
+    }
+
+    /**
      * Deduct from wallet balance
      */
     public function deductFromWallet(float $amount): bool
     {
         if ($this->wallet_balance >= $amount) {
             $this->decrement('wallet_balance', $amount);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Deduct from welcome bonus
+     */
+    public function deductFromWelcomeBonus(float $amount): bool
+    {
+        if ($this->welcome_bonus >= $amount) {
+            $this->decrement('welcome_bonus', $amount);
             return true;
         }
         return false;
@@ -504,11 +541,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get total earnings (wallet + referral earnings)
+     * Get total earnings (wallet + referral earnings + welcome bonus)
      */
     public function getTotalEarnings(): float
     {
-        return (float) $this->wallet_balance + (float) $this->referral_earnings;
+        return (float) $this->wallet_balance + (float) $this->referral_earnings + (float) $this->welcome_bonus;
     }
 
     /**
@@ -525,6 +562,22 @@ class User extends Authenticatable
     public function getReferralEarnings(): float
     {
         return (float) $this->referral_earnings;
+    }
+
+    /**
+     * Get welcome bonus amount
+     */
+    public function getWelcomeBonus(): float
+    {
+        return (float) $this->welcome_bonus;
+    }
+
+    /**
+     * Check if user has claimed their welcome bonus
+     */
+    public function hasClaimedWelcomeBonus(): bool
+    {
+        return $this->welcome_bonus > 0;
     }
 
     /**
@@ -969,5 +1022,73 @@ class User extends Authenticatable
         }
 
         return parent::update($attributes, $options);
+    }
+
+    /**
+     * Check if the user is a vendor
+     */
+    public function isVendor(): bool
+    {
+        return $this->is_vendor === true;
+    }
+
+    /**
+     * Make the user a vendor
+     */
+    public function makeVendor(array $vendorData = []): void
+    {
+        $this->update(array_merge([
+            'is_vendor' => true,
+        ], $vendorData));
+    }
+
+    /**
+     * Get vendor access keys
+     */
+    public function vendorAccessKeys(): HasMany
+    {
+        return $this->hasMany(VendorAccessKey::class, 'vendor_id');
+    }
+
+    /**
+     * Get access keys created by this vendor
+     */
+    public function createdVendorAccessKeys(): HasMany
+    {
+        return $this->hasMany(VendorAccessKey::class, 'vendor_id');
+    }
+
+    /**
+     * Get access keys sold by this vendor
+     */
+    public function soldVendorAccessKeys(): HasMany
+    {
+        return $this->hasMany(VendorAccessKey::class, 'vendor_id')->where('is_sold', true);
+    }
+
+    /**
+     * Get total earnings from selling access keys
+     */
+    public function getTotalVendorEarnings(): float
+    {
+        return (float) $this->createdVendorAccessKeys()
+            ->where('is_sold', true)
+            ->sum('earned_amount');
+    }
+
+    /**
+     * Get total access keys created by this vendor
+     */
+    public function getTotalVendorAccessKeys(): int
+    {
+        return $this->createdVendorAccessKeys()->count();
+    }
+
+    /**
+     * Get total access keys sold by this vendor
+     */
+    public function getTotalSoldVendorAccessKeys(): int
+    {
+        return $this->soldVendorAccessKeys()->count();
     }
 }

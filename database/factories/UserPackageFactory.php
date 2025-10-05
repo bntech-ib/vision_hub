@@ -26,9 +26,10 @@ class UserPackageFactory extends Factory
             'course_access_limit' => $this->faker->randomElement([null, 1, 5, 10, 20]),
             'marketplace_access' => $this->faker->boolean(),
             'brain_teaser_access' => $this->faker->boolean(),
-            'duration_days' => $this->faker->randomElement([null, 30, 90, 180, 365]),
+            'duration_days' => $this->faker->randomElement([30, 90, 180, 365]), // Never null
             'is_active' => true,
             'referral_earning_percentage' => $this->faker->randomFloat(2, 0, 25), // 0-25% referral earnings
+            'welcome_bonus' => $this->faker->randomElement([0, 100, 250, 500, 1000]), // Welcome bonus amount
         ];
     }
 
@@ -55,6 +56,7 @@ class UserPackageFactory extends Factory
             'marketplace_access' => true,
             'brain_teaser_access' => true,
             'referral_earning_percentage' => $this->faker->randomFloat(2, 10, 25), // 10-25% for premium
+            'welcome_bonus' => $this->faker->randomElement([500, 1000, 1500]), // Higher welcome bonus for premium
         ]);
     }
 }

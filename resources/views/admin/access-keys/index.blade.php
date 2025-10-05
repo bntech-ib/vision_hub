@@ -12,6 +12,62 @@
     </div>
 </div>
 
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card stat-card-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Total</h5>
+                        <h2 class="mb-0">{{ $stats['total'] ?? 0 }}</h2>
+                    </div>
+                    <i class="bi bi-key fs-1 text-primary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-card-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Used</h5>
+                        <h2 class="mb-0">{{ $stats['used'] ?? 0 }}</h2>
+                    </div>
+                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-card-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Available</h5>
+                        <h2 class="mb-0">{{ $stats['unused'] ?? 0 }}</h2>
+                    </div>
+                    <i class="bi bi-key fs-1 text-info"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-card-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Expired</h5>
+                        <h2 class="mb-0">{{ $stats['expired'] ?? 0 }}</h2>
+                    </div>
+                    <i class="bi bi-clock-history fs-1 text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mb-3">
     <div class="col-md-12">
         <div class="card">
@@ -237,4 +293,35 @@ function deleteAccessKey(accessKeyId) {
     }
 }
 </script>
+@endpush
+
+@push('styles')
+<style>
+.stat-card {
+    border-left: 4px solid;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-primary {
+    border-left-color: #0d6efd;
+}
+
+.stat-card-success {
+    border-left-color: #198754;
+}
+
+.stat-card-info {
+    border-left-color: #0dcaf0;
+}
+
+.stat-card-warning {
+    border-left-color: #ffc107;
+}
+</style>
 @endpush

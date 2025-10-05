@@ -39,8 +39,11 @@ class AccessKeyController extends Controller
 
         $accessKeys = $query->orderBy('created_at', 'desc')->paginate(20);
         $packages = UserPackage::where('is_active', true)->get();
+        
+        // Get statistics
+        $stats = $this->getAccessKeyStats();
 
-        return view('admin.access-keys.index', compact('accessKeys', 'packages'));
+        return view('admin.access-keys.index', compact('accessKeys', 'packages', 'stats'));
     }
 
     /**
@@ -142,5 +145,18 @@ class AccessKeyController extends Controller
             'success' => true,
             'message' => 'Access key activated successfully'
         ]);
+    }
+    
+    /**
+     * Get access key statistics
+     */
+    private function getAccessKeyStats(): array
+    {
+        return [
+            'total' => AccessKey::count(),
+            'used' => AccessKey::where('is_used', true)->count(),
+            'unused' => AccessKey::where('is_used', false)->where('is_active', true)->count(),
+            'expired' => AccessKey::where('is_active', false)->count(),
+        ];
     }
 }

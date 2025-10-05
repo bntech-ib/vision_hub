@@ -4,6 +4,8 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\SupportOption;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 
 class SupportOptionFactory extends Factory
 {
@@ -14,7 +16,7 @@ class SupportOptionFactory extends Factory
         return [
             'title' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
-            'icon' => $this->faker->word(),
+            'avatar' => null, // Will be set manually when needed
             'whatsapp_number' => $this->faker->numerify('+1##########'),
             'whatsapp_message' => $this->faker->sentence(),
             'sort_order' => $this->faker->numberBetween(0, 10),

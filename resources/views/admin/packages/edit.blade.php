@@ -48,6 +48,12 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="welcome_bonus" class="form-label">Welcome Bonus ($)</label>
+                        <input type="number" class="form-control" id="welcome_bonus" name="welcome_bonus" step="0.01" min="0" value="{{ old('welcome_bonus', $package->welcome_bonus) }}">
+                        <div class="form-text">Welcome bonus amount for new users subscribing to this package</div>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="features" class="form-label">Features (comma separated)</label>
                         <input type="text" class="form-control" id="features" name="features" value="{{ old('features', is_array($package->features) ? implode(', ', $package->features) : $package->features) }}">
                         <div class="form-text">Enter features separated by commas. Leave empty for no features.</div>
@@ -148,6 +154,10 @@
                 <div class="d-flex justify-content-between small">
                     <span>Duration:</span>
                     <span>{{ $package->duration_days ? $package->duration_days . ' days' : 'Lifetime' }}</span>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span>Welcome Bonus:</span>
+                    <span>${{ number_format($package->welcome_bonus, 2) }}</span>
                 </div>
                 <div class="d-flex justify-content-between small">
                     <span>Daily Earning Limit:</span>

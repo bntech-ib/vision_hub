@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class SupportOptionController extends Controller
 {
@@ -34,7 +35,7 @@ class SupportOptionController extends Controller
                 'id' => $option->id,
                 'title' => $option->title,
                 'description' => $option->description,
-                'icon' => $option->icon,
+                'avatar' => $option->avatar ? Storage::url($option->avatar) : null,
                 'whatsapp_link' => $whatsappLink,
                 'whatsapp_number' => $option->whatsapp_number,
                 'whatsapp_message' => $option->whatsapp_message,
@@ -60,12 +61,17 @@ class SupportOptionController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'icon' => 'nullable|string|max:255',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'whatsapp_number' => 'nullable|string|max:255',
             'whatsapp_message' => 'nullable|string|max:1000',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            $validated['avatar'] = $request->file('avatar')->store('support-avatars', 'public');
+        }
 
         $supportOption = SupportOption::create($validated);
 
@@ -96,12 +102,22 @@ class SupportOptionController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
-            'icon' => 'nullable|string|max:255',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'whatsapp_number' => 'nullable|string|max:255',
             'whatsapp_message' => 'nullable|string|max:1000',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if it exists
+            if ($supportOption->avatar) {
+                Storage::disk('public')->delete($supportOption->avatar);
+            }
+            
+            $validated['avatar'] = $request->file('avatar')->store('support-avatars', 'public');
+        }
 
         $supportOption->update($validated);
 
@@ -117,6 +133,11 @@ class SupportOptionController extends Controller
      */
     public function destroy(SupportOption $supportOption): JsonResponse
     {
+        // Delete avatar if it exists
+        if ($supportOption->avatar) {
+            Storage::disk('public')->delete($supportOption->avatar);
+        }
+        
         $supportOption->delete();
 
         return response()->json([
@@ -148,7 +169,7 @@ class SupportOptionController extends Controller
                 'id' => $option->id,
                 'title' => $option->title,
                 'description' => $option->description,
-                'icon' => $option->icon,
+                'avatar' => $option->avatar ? Storage::url($option->avatar) : null,
                 'whatsapp_link' => $whatsappLink,
             ];
         }

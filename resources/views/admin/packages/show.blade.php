@@ -43,6 +43,11 @@
                 </div>
                 <hr>
                 <div class="row">
+                    <div class="col-sm-3"><strong>Welcome Bonus:</strong></div>
+                    <div class="col-sm-9">${{ number_format($package->welcome_bonus, 2) }}</div>
+                </div>
+                <hr>
+                <div class="row">
                     <div class="col-sm-3"><strong>Status:</strong></div>
                     <div class="col-sm-9">
                         @if($package->is_active)

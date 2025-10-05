@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class SupportOption extends Model
 {
@@ -17,7 +18,7 @@ class SupportOption extends Model
     protected $fillable = [
         'title',
         'description',
-        'icon',
+        'avatar',
         'whatsapp_number',
         'whatsapp_message',
         'sort_order',
@@ -58,5 +59,17 @@ class SupportOption extends Model
         $message = rawurlencode($this->whatsapp_message);
         
         return "https://wa.me/{$number}?text={$message}";
+    }
+
+    /**
+     * Get the full URL to the avatar.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!$this->avatar) {
+            return null;
+        }
+
+        return Storage::url($this->avatar);
     }
 }
