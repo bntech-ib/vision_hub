@@ -42,89 +42,47 @@ class AuthController extends Controller
             'fullName' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'confirmPassword' => 'required|string|min:8|same:password',
-            'accessKey' => 'required|string|exists:access_keys,key',
+            'password' => 'required|string|min:8|confirmed',
             'country' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
-            'referrerCode' => 'nullable|string|exists:users,referral_code',
+            'referralCode' => 'nullable|string|exists:users,referral_code',
+            'accessKey' => 'required|string|exists:access_keys,key,is_used,0,is_active,1',
         ]);
 
-        // Verify access key
-        $accessKey = AccessKey::where('key', $validated['accessKey'])->first();
-        
-        if (!$accessKey || !$accessKey->canBeUsed()) {
+        // Validate access key
+        $accessKey = AccessKey::where('key', $validated['accessKey'])
+            ->where('is_used', false)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$accessKey) {
             throw ValidationException::withMessages([
-                'accessKey' => ['The access key is invalid or has already been used.'],
+                'accessKey' => ['The provided access key is invalid or has already been used.'],
             ]);
         }
 
-        // Find referrer if provided
-        $referrer = null;
-        if (!empty($validated['referrerCode'])) {
-            $referrer = User::where('referral_code', $validated['referrerCode'])->first();
+        // Check if referral code exists and get the referring user
+        $referredBy = null;
+        if (!empty($validated['referralCode'])) {
+            $referredBy = User::where('referral_code', $validated['referralCode'])->first();
         }
 
-        // Generate referral code - use username if unique, otherwise generate random code
-        $referralCode = $this->generateUniqueReferralCode($validated['username']);
-
-        // Create user with package from access key
-        /** @var User $user */
+        // Create user
         $user = User::create([
             'name' => $validated['fullName'],
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'country' => $validated['country'] ?? null,
-            'phone' => $validated['phone'] ?? null,
-            'referral_code' => $referralCode,
+            'referral_code' => $this->generateUniqueReferralCode($validated['username']),
+            'referred_by' => $referredBy ? $referredBy->id : null,
             'current_package_id' => $accessKey->package_id,
             'package_expires_at' => $accessKey->package->duration_days ? 
                 now()->addDays((int) $accessKey->package->duration_days) : null,
-            'referred_by' => $referrer ? $referrer->id : null,
         ]);
 
-        // Mark access key as used
-        $accessKey->update([
-            'is_used' => true,
-            'used_by' => $user->id,
-            'used_at' => now(),
-        ]);
-
-        // Award referral bonuses if applicable
-        if ($referrer) {
-            // Base referral amounts
-            $baseLevel1Bonus = 100; // Amount in your currency
-            $baseLevel2Bonus = 50;  // Amount in your currency
-            $baseLevel3Bonus = 25;  // Amount in your currency
-            
-            // Calculate actual bonus amounts based on the package that was applied to the new user
-            $level1Bonus = $baseLevel1Bonus;
-            if ($accessKey->package && $accessKey->package->referral_earning_percentage > 0) {
-                $level1Bonus = (float) $accessKey->package->referral_earning_percentage;
-            }
-            
-            // Award direct referral bonus (Level 1) to referral earnings
-            $referrer->addToReferralEarnings($level1Bonus);
-            
-            // Log the referral bonus
-            \App\Models\ReferralBonus::create([
-                'referrer_id' => $referrer->id,
-                'referred_user_id' => $user->id,
-                'level' => 1,
-                'amount' => $level1Bonus,
-                'description' => 'Direct referral bonus for ' . $user->username,
-            ]);
-            
-            // Log the transaction for the referrer
-            $referrer->transactions()->create([
-                'amount' => $level1Bonus,
-                'type' => 'referral_earning',
-                'description' => 'Direct referral bonus for ' . $user->username,
-                'status' => 'completed',
-            ]);
-            
-            // No referral earnings for level 2 and 3 (as requested)
+        // Award referral bonus to referring user (only for level 1 referrals)
+        if ($referredBy) {
+            // Only award referral bonus for level 1 referrals
             // Level 2 and 3 referral bonuses have been removed
         }
 
@@ -168,13 +126,7 @@ class AuthController extends Controller
                     'fullName' => $user->name,
                     'phone' => $user->phone,
                     'country' => $user->country,
-                    'package' => $user->currentPackage ? [
-                        'id' => (string)$user->currentPackage->id,
-                        'name' => $user->currentPackage->name,
-                        'price' => (int)$user->currentPackage->price,
-                        'benefits' => $packageBenefits,
-                        'duration' => (int)$user->currentPackage->duration_days,
-                    ] : null,
+                    'package' => $user->currentPackage ? $this->formatPackageDetails($user->currentPackage) : null,
                     'referralCode' => $user->referral_code,
                     'referralStats' => [
                         'level1Count' => $referralStats['level1_count'],
@@ -267,13 +219,7 @@ class AuthController extends Controller
                     'fullName' => $user->name,
                     'phone' => $user->phone,
                     'country' => $user->country,
-                    'package' => $user->currentPackage ? [
-                        'id' => (string)$user->currentPackage->id,
-                        'name' => $user->currentPackage->name,
-                        'price' => $user->currentPackage->price,
-                        'benefits' => $packageBenefits,
-                        'duration' => $user->currentPackage->duration_days,
-                    ] : null,
+                    'package' => $user->currentPackage ? $this->formatPackageDetails($user->currentPackage) : null,
                     'referralCode' => $user->referral_code,
                     'referralStats' => [
                         'level1Count' => $referralStats['level1_count'],
@@ -363,13 +309,7 @@ class AuthController extends Controller
                     'fullName' => $user->name,
                     'phone' => $user->phone,
                     'country' => $user->country,
-                    'package' => $user->currentPackage ? [
-                        'id' => (string)$user->currentPackage->id,
-                        'name' => $user->currentPackage->name,
-                        'price' => $user->currentPackage->price,
-                        'benefits' => $packageBenefits,
-                        'duration' => $user->currentPackage->duration_days,
-                    ] : null,
+                    'package' => $user->currentPackage ? $this->formatPackageDetails($user->currentPackage) : null,
                     'referralCode' => $user->referral_code,
                     'referralStats' => [
                         'level1Count' => $referralStats['level1_count'],
@@ -481,13 +421,7 @@ class AuthController extends Controller
                     'fullName' => $user->name,
                     'phone' => $user->phone,
                     'country' => $user->country,
-                    'package' => $user->currentPackage ? [
-                        'id' => (string)$user->currentPackage->id,
-                        'name' => $user->currentPackage->name,
-                        'price' => (int)$user->currentPackage->price,
-                        'benefits' => $packageBenefits,
-                        'duration' => (int)$user->currentPackage->duration_days,
-                    ] : null,
+                    'package' => $user->currentPackage ? $this->formatPackageDetails($user->currentPackage) : null,
                     'referralCode' => $user->referral_code,
                     'referralStats' => [
                         'level1Count' => $referralStats['level1_count'],
@@ -574,13 +508,7 @@ class AuthController extends Controller
                     'fullName' => $user->name,
                     'phone' => $user->phone,
                     'country' => $user->country,
-                    'package' => $user->currentPackage ? [
-                        'id' => (string)$user->currentPackage->id,
-                        'name' => $user->currentPackage->name,
-                        'price' => (int)$user->currentPackage->price,
-                        'benefits' => $packageBenefits,
-                        'duration' => (int)$user->currentPackage->duration_days,
-                    ] : null,
+                    'package' => $user->currentPackage ? $this->formatPackageDetails($user->currentPackage) : null,
                     'referralCode' => $user->referral_code,
                     'referralStats' => [
                         'level1Count' => $referralStats['level1_count'],
@@ -663,11 +591,22 @@ class AuthController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        $tokens = $user->tokens()->select(['id', 'name', 'created_at', 'last_used_at'])->get();
+        
+        $tokens = $user->tokens->map(function ($token) {
+            return [
+                'id' => (string)$token->id,
+                'name' => $token->name,
+                'abilities' => $token->abilities,
+                'lastUsedAt' => $token->last_used_at ? $token->last_used_at->toISOString() : null,
+                'createdAt' => $token->created_at->toISOString(),
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $tokens,
+            'data' => [
+                'tokens' => $tokens
+            ]
         ]);
     }
 
@@ -676,40 +615,79 @@ class AuthController extends Controller
      */
     public function createToken(Request $request): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'abilities' => 'array',
         ]);
 
-        $token = $user->createToken($validated['name'])->plainTextToken;
+        /** @var User $user */
+        $user = $request->user();
+        
+        $token = $user->createToken(
+            $validated['name'], 
+            $validated['abilities'] ?? ['*']
+        )->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'Token created successfully',
             'data' => [
-                'token' => $token,
-                'name' => $validated['name'],
+                'token' => $token
             ],
+            'message' => 'API token created successfully'
         ]);
     }
 
     /**
-     * Revoke a specific API token
+     * Revoke an API token
      */
     public function revokeToken(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'token_id' => 'required|integer',
+        ]);
+
         /** @var User $user */
         $user = $request->user();
-        $validated = $request->validate([
-            'token_id' => 'required|exists:personal_access_tokens,id',
-        ]);
-
-        $user->tokens()->where('id', $validated['token_id'])->delete();
+        
+        $token = $user->tokens()->where('id', $validated['token_id'])->first();
+        
+        if ($token) {
+            $token->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'API token revoked successfully'
+            ]);
+        }
 
         return response()->json([
-            'success' => true,
-            'message' => 'Token revoked successfully',
-        ]);
+            'success' => false,
+            'message' => 'Token not found'
+        ], 404);
+    }
+
+    /**
+     * Format package details with all fields
+     */
+    private function formatPackageDetails($package)
+    {
+        return [
+            'id' => (string)$package->id,
+            'name' => $package->name,
+            'description' => $package->description,
+            'price' => (float)$package->price,
+            'benefits' => $package->features ?? [],
+            'duration' => (int)$package->duration_days,
+            'adViewsLimit' => (int)$package->ad_views_limit,
+            'courseAccessLimit' => (int)$package->course_access_limit,
+            'marketplaceAccess' => (bool)$package->marketplace_access,
+            'brainTeaserAccess' => (bool)$package->brain_teaser_access,
+            'isActive' => (bool)$package->is_active,
+            'referralEarningPercentage' => (float)$package->referral_earning_percentage,
+            'welcomeBonus' => (float)$package->welcome_bonus,
+            'dailyEarningLimit' => (float)$package->daily_earning_limit,
+            'adLimits' => (int)$package->ad_limits,
+            'createdAt' => $package->created_at->toISOString(),
+            'updatedAt' => $package->updated_at->toISOString(),
+        ];
     }
 }
