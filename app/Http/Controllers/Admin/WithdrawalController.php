@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\WithdrawalRequest;
 use App\Models\User;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -40,33 +41,10 @@ class WithdrawalController extends Controller
             $query->where('payment_method', $request->payment_method);
         }
 
-        if ($request->filled('amount_min')) {
-            $query->where('amount', '>=', $request->amount_min);
-        }
+        $withdrawals = $query->orderBy('created_at', 'desc')
+            ->paginate(20);
 
-        if ($request->filled('amount_max')) {
-            $query->where('amount', '<=', $request->amount_max);
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-
-        $withdrawals = $query->orderBy('created_at', 'desc')->paginate(20);
-        
-        $stats = [
-            'total_withdrawals' => WithdrawalRequest::count(),
-            'pending_withdrawals' => WithdrawalRequest::where('status', 'pending')->count(),
-            'approved_withdrawals' => WithdrawalRequest::where('status', 'approved')->count(),
-            'total_amount_pending' => WithdrawalRequest::where('status', 'pending')->sum('amount'),
-            'total_amount_approved' => WithdrawalRequest::where('status', 'approved')->sum('amount')
-        ];
-
-        return view('admin.withdrawals.index', compact('withdrawals', 'stats'));
+        return view('admin.withdrawals.index', compact('withdrawals'));
     }
 
     /**
@@ -145,15 +123,16 @@ class WithdrawalController extends Controller
         ]);
 
         // Create transaction record
-        // This would create a transaction record in your transactions table
-        // Transaction::create([
-        //     'user_id' => $withdrawal->user_id,
-        //     'type' => 'withdrawal',
-        //     'amount' => -$withdrawal->amount,
-        //     'status' => 'completed',
-        //     'withdrawal_id' => $withdrawal->id,
-        //     'transaction_id' => $validated['transaction_id'] ?? 'withdrawal_' . $withdrawal->id
-        // ]);
+        Transaction::create([
+            'user_id' => $withdrawal->user_id,
+            'type' => 'withdrawal',
+            'amount' => -$withdrawal->amount, // Negative amount for withdrawals
+            'description' => 'Withdrawal approved - ' . ($withdrawal->payment_method_id == 1 ? 'Wallet Balance' : 'Referral Earnings'),
+            'status' => 'completed',
+            'reference_type' => WithdrawalRequest::class,
+            'reference_id' => $withdrawal->id,
+            'transaction_id' => $validated['transaction_id'] ?? 'withdrawal_' . $withdrawal->id
+        ]);
 
         // Determine message based on payment method
         $message = 'Withdrawal approved successfully';
