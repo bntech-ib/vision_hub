@@ -105,12 +105,16 @@ class WithdrawalController extends Controller
         ]);
 
         // Update the transaction record status
-        Transaction::where('reference_type', WithdrawalRequest::class)
+        $transaction = Transaction::where('reference_type', WithdrawalRequest::class)
             ->where('reference_id', $withdrawal->id)
-            ->update([
+            ->first();
+            
+        if ($transaction) {
+            $transaction->update([
                 'status' => 'completed',
                 'transaction_id' => $validated['transaction_id'] ?? 'withdrawal_' . $withdrawal->id
             ]);
+        }
 
         // Determine message based on payment method
         $message = 'Withdrawal approved successfully';
@@ -120,10 +124,41 @@ class WithdrawalController extends Controller
             $message = 'Referral earnings withdrawal approved successfully';
         }
 
+        // Format detailed withdrawal information including transaction details
+        $formattedWithdrawal = [
+            'id' => (string)$withdrawal->id,
+            'userId' => (string)$withdrawal->user_id,
+            'amount' => (float)$withdrawal->amount,
+            'currency' => 'NGN',
+            'paymentMethod' => [
+                'id' => (int)$withdrawal->payment_method_id,
+                'name' => $withdrawal->payment_method
+            ],
+            'accountDetails' => $withdrawal->payment_details,
+            'status' => $withdrawal->status,
+            'requestedAt' => $withdrawal->created_at->toISOString(),
+            'processedAt' => $withdrawal->processed_at->toISOString(),
+            'processedBy' => (string)$withdrawal->processed_by,
+            'notes' => $withdrawal->notes,
+            'transactionId' => $validated['transaction_id'] ?? 'withdrawal_' . $withdrawal->id,
+            'transaction' => $transaction ? [
+                'id' => (string)$transaction->id,
+                'transactionId' => $transaction->transaction_id,
+                'type' => $transaction->type,
+                'amount' => (float)$transaction->amount,
+                'description' => $transaction->description,
+                'status' => $transaction->status,
+                'createdAt' => $transaction->created_at->toISOString(),
+                'updatedAt' => $transaction->updated_at->toISOString()
+            ] : null
+        ];
+
         return response()->json([
             'success' => true,
             'message' => $message,
-            'withdrawal' => $withdrawal->fresh(['user'])
+            'data' => [
+                'withdrawal' => $formattedWithdrawal
+            ]
         ]);
     }
 

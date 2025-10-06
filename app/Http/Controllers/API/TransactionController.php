@@ -439,19 +439,46 @@ class TransactionController extends Controller
 
             // Format withdrawals data to match documentation
             $formattedWithdrawals = $withdrawals->map(function ($withdrawal) {
-                return [
+                // Get associated transaction
+                $transaction = Transaction::where('reference_type', WithdrawalRequest::class)
+                    ->where('reference_id', $withdrawal->id)
+                    ->first();
+                
+                $result = [
                     'id' => (string)$withdrawal->id,
                     'userId' => (string)$withdrawal->user_id,
-                    'amount' => (int)$withdrawal->amount,
+                    'amount' => (float)$withdrawal->amount,
                     'currency' => 'NGN',
-                    'paymentMethod' => $withdrawal->payment_method,
-                    'paymentDetails' => $withdrawal->payment_details,
+                    'paymentMethod' => [
+                        'id' => (int)$withdrawal->payment_method_id,
+                        'name' => $withdrawal->payment_method
+                    ],
+                    'accountDetails' => $withdrawal->payment_details,
                     'status' => $withdrawal->status,
+                    'requestedAt' => $withdrawal->created_at->toISOString(),
                     'processedAt' => $withdrawal->processed_at ? $withdrawal->processed_at->toISOString() : null,
-                    'adminNotes' => $withdrawal->admin_notes,
+                    'notes' => $withdrawal->notes,
+                    'rejectionReason' => $withdrawal->rejection_reason,
+                    'transactionId' => $withdrawal->transaction_id,
                     'createdAt' => $withdrawal->created_at->toISOString(),
                     'updatedAt' => $withdrawal->updated_at->toISOString()
                 ];
+                
+                // Add transaction details if available
+                if ($transaction) {
+                    $result['transaction'] = [
+                        'id' => (string)$transaction->id,
+                        'transactionId' => $transaction->transaction_id,
+                        'type' => $transaction->type,
+                        'amount' => (float)$transaction->amount,
+                        'description' => $transaction->description,
+                        'status' => $transaction->status,
+                        'createdAt' => $transaction->created_at->toISOString(),
+                        'updatedAt' => $transaction->updated_at->toISOString()
+                    ];
+                }
+                
+                return $result;
             });
 
             return response()->json([
