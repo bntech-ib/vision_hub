@@ -19,14 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'http://localhost:8100',
-        'http://localhost:8101', 
-        'http://localhost:3000', 
-        'http://localhost:8080',
-        'https://www.all-visionhub.beer',
-        'https://web.all-visionhub.online'
-    ],
+    'allowed_origins' => [ '*'],
 
     'allowed_origins_patterns' => [],
 

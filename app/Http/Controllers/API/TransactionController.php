@@ -346,15 +346,43 @@ class TransactionController extends Controller
                 'bankName' => $user->bank_name
             ];
 
-            // Create withdrawal request
-            $withdrawalRequest = WithdrawalRequest::create([
-                'user_id' => $user->id,
-                'amount' => $amount,
-                'payment_method' => $paymentMethodName,
-                'payment_method_id' => $paymentMethodId,
-                'payment_details' => $accountDetails,
-                'status' => 'pending'
-            ]);
+            // Deduct amount from user's balance immediately when creating withdrawal request
+            DB::beginTransaction();
+            try {
+                if ($paymentMethodId == 1) {
+                    // Deduct from wallet balance
+                    $user->deductFromWallet($amount);
+                } else if ($paymentMethodId == 2) {
+                    // Deduct from referral earnings
+                    $user->deductFromReferralEarnings($amount);
+                }
+
+                // Create withdrawal request
+                $withdrawalRequest = WithdrawalRequest::create([
+                    'user_id' => $user->id,
+                    'amount' => $amount,
+                    'payment_method' => $paymentMethodName,
+                    'payment_method_id' => $paymentMethodId,
+                    'payment_details' => $accountDetails,
+                    'status' => 'pending'
+                ]);
+
+                // Create transaction record for the deduction
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'withdrawal_request',
+                    'amount' => -$amount, // Negative amount for deductions
+                    'description' => 'Withdrawal requested - ' . $paymentMethodName,
+                    'status' => 'pending',
+                    'reference_type' => WithdrawalRequest::class,
+                    'reference_id' => $withdrawalRequest->id
+                ]);
+
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
 
             // Format withdrawal request data to match documentation
             $formattedWithdrawalRequest = [

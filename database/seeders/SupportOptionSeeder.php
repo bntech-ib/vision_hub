@@ -44,7 +44,7 @@ class SupportOptionSeeder extends Seeder
             [
                 'title' => 'Technical Support',
                 'description' => 'Troubleshoot technical issues and platform bugs',
-                'icon' => 'shield',
+                'avatar' => null,
                 'whatsapp_number' => '+1234567893',
                 'whatsapp_message' => 'Hello, I am experiencing technical issues',
                 'sort_order' => 4,
@@ -53,7 +53,7 @@ class SupportOptionSeeder extends Seeder
             [
                 'title' => 'Billing Inquiries',
                 'description' => 'Questions about packages, pricing, and billing',
-                'icon' => 'wallet',
+                'avatar' => null,
                 'whatsapp_number' => '+1234567894',
                 'whatsapp_message' => 'Hello, I have a billing question',
                 'sort_order' => 5,

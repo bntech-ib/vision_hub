@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class WithdrawalController extends Controller
 {
@@ -75,45 +76,26 @@ class WithdrawalController extends Controller
         ]);
 
         // Check if user has sufficient balance based on payment method
+        // This is just a safety check, as the amount should already be deducted
         if ($withdrawal->payment_method_id == 1) {
             // Check wallet balance
-            if ($withdrawal->user->wallet_balance < $withdrawal->amount) {
+            if ($withdrawal->user->wallet_balance < 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User has insufficient wallet balance for this withdrawal'
+                    'message' => 'User has negative wallet balance'
                 ], 400);
             }
         } else if ($withdrawal->payment_method_id == 2) {
             // Check referral earnings balance
-            if ($withdrawal->user->referral_earnings < $withdrawal->amount) {
+            if ($withdrawal->user->referral_earnings < 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User has insufficient referral earnings balance for this withdrawal'
-                ], 400);
-            }
-        } else {
-            // Default to wallet balance check
-            if ($withdrawal->user->wallet_balance < $withdrawal->amount) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User has insufficient balance for this withdrawal'
+                    'message' => 'User has negative referral earnings balance'
                 ], 400);
             }
         }
 
-        // Deduct amount from appropriate balance
-        if ($withdrawal->payment_method_id == 1) {
-            // Deduct from wallet balance
-            $withdrawal->user->deductFromWallet($withdrawal->amount);
-        } else if ($withdrawal->payment_method_id == 2) {
-            // Deduct from referral earnings
-            $withdrawal->user->deductFromReferralEarnings($withdrawal->amount);
-        } else {
-            // Default to deducting from wallet balance
-            $withdrawal->user->deductFromWallet($withdrawal->amount);
-        }
-
-        // Update withdrawal status
+        // Update withdrawal status - no additional deduction needed as it was already deducted
         $withdrawal->update([
             'status' => 'approved',
             'processed_at' => now(),
@@ -122,17 +104,13 @@ class WithdrawalController extends Controller
             'transaction_id' => $validated['transaction_id'] ?? null
         ]);
 
-        // Create transaction record
-        Transaction::create([
-            'user_id' => $withdrawal->user_id,
-            'type' => 'withdrawal',
-            'amount' => -$withdrawal->amount, // Negative amount for withdrawals
-            'description' => 'Withdrawal approved - ' . ($withdrawal->payment_method_id == 1 ? 'Wallet Balance' : 'Referral Earnings'),
-            'status' => 'completed',
-            'reference_type' => WithdrawalRequest::class,
-            'reference_id' => $withdrawal->id,
-            'transaction_id' => $validated['transaction_id'] ?? 'withdrawal_' . $withdrawal->id
-        ]);
+        // Update the transaction record status
+        Transaction::where('reference_type', WithdrawalRequest::class)
+            ->where('reference_id', $withdrawal->id)
+            ->update([
+                'status' => 'completed',
+                'transaction_id' => $validated['transaction_id'] ?? 'withdrawal_' . $withdrawal->id
+            ]);
 
         // Determine message based on payment method
         $message = 'Withdrawal approved successfully';
@@ -165,16 +143,57 @@ class WithdrawalController extends Controller
             'reason' => 'required|string|max:500'
         ]);
 
-        $withdrawal->update([
-            'status' => 'rejected',
-            'processed_at' => now(),
-            'processed_by' => Auth::id(),
-            'rejection_reason' => $validated['reason']
-        ]);
+        // Refund the amount to the user's original source
+        DB::beginTransaction();
+        try {
+            if ($withdrawal->payment_method_id == 1) {
+                // Refund to wallet balance
+                $withdrawal->user->addToWallet($withdrawal->amount);
+            } else if ($withdrawal->payment_method_id == 2) {
+                // Refund to referral earnings
+                $withdrawal->user->addToReferralEarnings($withdrawal->amount);
+            }
+
+            // Update withdrawal status
+            $withdrawal->update([
+                'status' => 'rejected',
+                'processed_at' => now(),
+                'processed_by' => Auth::id(),
+                'rejection_reason' => $validated['reason']
+            ]);
+
+            // Create refund transaction record
+            Transaction::create([
+                'user_id' => $withdrawal->user_id,
+                'type' => 'withdrawal_refund',
+                'amount' => $withdrawal->amount, // Positive amount for refunds
+                'description' => 'Withdrawal rejected - ' . ($withdrawal->payment_method_id == 1 ? 'Wallet Balance' : 'Referral Earnings') . ' refunded',
+                'status' => 'completed',
+                'reference_type' => WithdrawalRequest::class,
+                'reference_id' => $withdrawal->id,
+                'transaction_id' => 'refund_withdrawal_' . $withdrawal->id
+            ]);
+
+            // Update the original transaction record status
+            Transaction::where('reference_type', WithdrawalRequest::class)
+                ->where('reference_id', $withdrawal->id)
+                ->update([
+                    'status' => 'refunded',
+                    'description' => 'Withdrawal rejected - Amount refunded to ' . ($withdrawal->payment_method_id == 1 ? 'Wallet Balance' : 'Referral Earnings')
+                ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject withdrawal request: ' . $e->getMessage()
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Withdrawal rejected successfully',
+            'message' => 'Withdrawal rejected successfully and amount refunded',
             'withdrawal' => $withdrawal->fresh(['user'])
         ]);
     }

@@ -43,7 +43,7 @@ class UserController extends Controller
             }
         }
         
-        $users = $query->latest()->paginate(20);
+        $users = $query->latest()->paginate(100);
         $packages = UserPackage::where('is_active', true)->get();
         
         return view('admin.users.index', compact('users', 'packages'));

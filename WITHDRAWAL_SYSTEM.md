@@ -54,29 +54,24 @@ POST /api/v1/wallet/withdraw
 }
 ```
 
-**Response (Success):**
+**Response:**
 ```json
 {
   "success": true,
   "message": "Withdrawal request submitted successfully",
-  "data": {
-    "withdrawal": {
-      "id": "1",
-      "userId": "1",
-      "amount": 100,
-      "currency": "NGN",
-      "paymentMethod": {
-        "id": 1,
-        "name": "Wallet Balance"
-      },
-      "accountDetails": {
-        "accountName": "John Doe",
-        "accountNumber": "1234567890",
-        "bankName": "Test Bank"
-      },
-      "status": "pending",
-      "requestedAt": "2025-01-01T10:00:00.000000Z"
-    }
+  "withdrawal": {
+    "id": 123,
+    "user_id": 456,
+    "amount": 100,
+    "payment_method": "Wallet Balance",
+    "payment_method_id": 1,
+    "payment_details": {
+      "accountName": "John Doe",
+      "accountNumber": "1234567890",
+      "bankName": "Test Bank"
+    },
+    "status": "pending",
+    "created_at": "2023-01-01T00:00:00.000000Z"
   }
 }
 ```
@@ -90,27 +85,27 @@ POST /api/admin/withdrawals/{id}/approve
 **Request Body:**
 ```json
 {
-  "notes": "Approved for user",
-  "transaction_id": "TXN_1234567890"
+  "notes": "Approved for processing",
+  "transaction_id": "txn_123456"
 }
 ```
 
-**Response (Success):**
+**Response:**
 ```json
 {
   "success": true,
   "message": "Wallet balance withdrawal approved successfully",
   "withdrawal": {
-    "id": "1",
-    "user_id": "1",
+    "id": 123,
+    "user_id": 456,
     "amount": 100,
     "payment_method": "Wallet Balance",
     "payment_method_id": 1,
     "status": "approved",
-    "processed_at": "2025-01-01T10:00:00.000000Z",
-    "processed_by": "1",
-    "notes": "Approved for user",
-    "transaction_id": "TXN_1234567890"
+    "processed_at": "2023-01-01T00:00:00.000000Z",
+    "processed_by": 789,
+    "notes": "Approved for processing",
+    "transaction_id": "txn_123456"
   }
 }
 ```
@@ -154,14 +149,6 @@ When a withdrawal is approved, a transaction record is created:
 
 Both methods return `true` on success and `false` if insufficient balance.
 
-## Testing
-
-Run the feature tests to verify the withdrawal system works correctly:
-
-```bash
-php artisan test --filter=WithdrawalDeductionTest
-```
-
 ## Implementation Details
 
 ### Key Methods
@@ -173,27 +160,10 @@ php artisan test --filter=WithdrawalDeductionTest
 ### Withdrawal Flow
 
 1. User submits withdrawal request via API
-2. System validates sufficient balance
-3. Withdrawal request is created with 'pending' status
-4. Admin approves withdrawal via admin panel
-5. System validates balance again (double-check)
-6. Deducts amount from selected source
-7. Creates transaction record
-8. Updates withdrawal status to 'approved'
-9. Returns success response
-
-## Error Handling
-
-The system handles the following error cases:
-
-1. **Insufficient balance** - Returns 400 Bad Request
-2. **Non-pending withdrawal** - Returns 400 Bad Request
-3. **Invalid withdrawal ID** - Returns 404 Not Found
-4. **Database errors** - Returns 500 Internal Server Error
-
-## Security
-
-- All endpoints require authentication
-- Admin endpoints require admin privileges
-- Balance validation prevents overdrafts
-- Transaction records provide audit trail
+2. System validates amount and payment method
+3. Request is stored with 'pending' status
+4. Admin reviews and approves the request
+5. System validates user has sufficient balance
+6. System deducts amount from selected source
+7. Transaction record is created
+8. Withdrawal status is updated to 'approved'

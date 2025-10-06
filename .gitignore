@@ -23,6 +23,7 @@ Thumbs.db
 /vendor
 .env
 .env.backup
+.env.production
 .phpunit.result.cache
 .php_cs.cache
 Homestead.json
@@ -41,7 +42,6 @@ CPANEL_DEPLOYMENT.md
 ADMIN_ACCESS.md
 
 # Ignore general documentation files
-*.md
 *.txt
 *.json
 API_DOCUMENTATION_README.md
@@ -52,9 +52,20 @@ API-Documentation.txt
 README.md
 VISIONHUB_API_DOCUMENTATION.md
 VISIONHUB_API_V2_DOCUMENTATION.md
+EXPORT_INSTRUCTIONS.md
+
+# Ignore export scripts (contain sensitive info)
+export_to_cpanel.php
+export_user_fields.php
+create_users_dump.sh
+export_to_cpanel.bat
+export_to_cpanel.sh
+export_users_to_sql.php
+generate_users_sql_dump.php
+test_withdrawal_deduction.php
 
 # Ignore log files
-.log
+*.log
 
 # Ignore SQLite database
 *.sqlite
@@ -64,4 +75,4 @@ VISIONHUB_API_V2_DOCUMENTATION.md
 docker-compose.override.yml
 
 # Ignore test files (as per user request)
-tests/
+# tests/

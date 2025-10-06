@@ -89,7 +89,8 @@ class AuthController extends Controller
         // Award welcome bonus from the package to new user
         $packageWelcomeBonus = (float) $accessKey->package->welcome_bonus ?? 0;
         if ($packageWelcomeBonus > 0) {
-            $user->addToWelcomeBonus($packageWelcomeBonus);
+            // Add welcome bonus to both welcome_bonus field and wallet_balance
+            $user->addToWalletAndWelcomeBonus($packageWelcomeBonus, $packageWelcomeBonus);
             
             // Log the welcome bonus transaction
             $user->transactions()->create([

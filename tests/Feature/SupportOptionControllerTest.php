@@ -33,7 +33,7 @@ class SupportOptionControllerTest extends TestCase
             'id' => $supportOption->id,
             'title' => $supportOption->title,
             'description' => $supportOption->description,
-            'icon' => $supportOption->icon,
+            'avatar' => $supportOption->avatar, // Changed from 'icon' to 'avatar'
             'whatsapp_link' => $supportOption->whatsapp_link,
         ];
 

@@ -62,11 +62,11 @@
                                 </tr>
                                 <tr>
                                     <th>Created At:</th>
-                                    <td>{{ $supportOption->created_at->format('M d, Y H:i:s') }}</td>
+                                    <td>{{ $supportOption->created_at ? $supportOption->created_at->format('M d, Y H:i:s') : 'N/A' }}</td>
                                 </tr>
                                 <tr>
                                     <th>Updated At:</th>
-                                    <td>{{ $supportOption->updated_at->format('M d, Y H:i:s') }}</td>
+                                    <td>{{ $supportOption->updated_at ? $supportOption->updated_at->format('M d, Y H:i:s') : 'N/A' }}</td>
                                 </tr>
                             </table>
                         </div>

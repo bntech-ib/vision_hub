@@ -107,6 +107,24 @@
             object-fit: cover;
             margin-right: 10px;
         }
+        
+        /* Fix pagination icon size */
+        .pagination .page-link i {
+            font-size: 0.875rem; /* Reduce icon size */
+            vertical-align: middle;
+        }
+        
+        /* Ensure consistent pagination styling */
+        .pagination .page-link {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        /* Adjust pagination container spacing */
+        .pagination {
+            margin-bottom: 0;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
