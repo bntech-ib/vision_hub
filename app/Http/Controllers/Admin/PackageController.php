@@ -75,14 +75,45 @@ class PackageController extends Controller
         $validated['brain_teaser_access'] = $request->has('brain_teaser_access');
         $validated['is_active'] = $request->has('is_active');
         
+        // Provide default values for required fields
+        if (!isset($validated['features'])) {
+            $validated['features'] = '[]';
+        }
+        
+        if (!isset($validated['ad_views_limit'])) {
+            $validated['ad_views_limit'] = 0;
+        }
+        
+        if (!isset($validated['daily_earning_limit'])) {
+            $validated['daily_earning_limit'] = 0;
+        }
+        
+        if (!isset($validated['ad_limits'])) {
+            $validated['ad_limits'] = 0;
+        }
+        
+        if (!isset($validated['referral_earning_percentage'])) {
+            $validated['referral_earning_percentage'] = 0;
+        }
+        
+        if (!isset($validated['welcome_bonus'])) {
+            $validated['welcome_bonus'] = 0;
+        }
+        
         // Process features if provided as JSON string
         if (isset($validated['features'])) {
-            $features = json_decode($validated['features'], true);
-            if (is_array($features)) {
-                $validated['features'] = $features;
+            // Check if it's already an array (from default value)
+            if (is_array($validated['features'])) {
+                // Do nothing, it's already in the correct format
             } else {
-                // If it's not valid JSON, treat as comma-separated string
-                $validated['features'] = array_filter(array_map('trim', explode(',', $validated['features'])));
+                // Process as JSON string or comma-separated values
+                $features = json_decode($validated['features'], true);
+                if (is_array($features)) {
+                    $validated['features'] = $features;
+                } else {
+                    // If it's not valid JSON, treat as comma-separated string
+                    $validated['features'] = array_filter(array_map('trim', explode(',', $validated['features'])));
+                }
             }
         }
 

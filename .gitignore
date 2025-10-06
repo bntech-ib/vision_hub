@@ -40,6 +40,19 @@ PUSH_INSTRUCTIONS.md
 CPANEL_DEPLOYMENT.md
 ADMIN_ACCESS.md
 
+# Ignore general documentation files
+*.md
+*.txt
+*.json
+API_DOCUMENTATION_README.md
+ADMIN-API-DOCUMENTATION.md
+API-DOCUMENTATION.json
+API-DOCUMENTATION.md
+API-Documentation.txt
+README.md
+VISIONHUB_API_DOCUMENTATION.md
+VISIONHUB_API_V2_DOCUMENTATION.md
+
 # Ignore log files
 .log
 
@@ -49,3 +62,6 @@ ADMIN_ACCESS.md
 
 # Ignore Docker files (if needed)
 docker-compose.override.yml
+
+# Ignore test files (as per user request)
+tests/

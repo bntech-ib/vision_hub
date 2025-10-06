@@ -287,13 +287,17 @@ class TransactionController extends Controller
                 ], 403);
             }
             
+            // Check if user has bound bank account details
+            if (!$user->hasBoundBankAccount()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must bind your bank account details before requesting a withdrawal.'
+                ], 400);
+            }
+
             $validator = Validator::make($request->all(), [
                 'amount' => 'required|numeric|min:10|max:10000',
-                'paymentMethod.type' => 'required|string',
-                'paymentMethod.name' => 'required|string',
-                'accountDetails.accountName' => 'required|string|max:255',
-                'accountDetails.accountNumber' => 'required|string|max:255',
-                'accountDetails.bankName' => 'required|string|max:255'
+                'payment_method_id' => 'required|integer|in:1,2' // 1 = wallet balance, 2 = referral earnings
             ]);
 
             if ($validator->fails()) {
@@ -305,41 +309,50 @@ class TransactionController extends Controller
             }
 
             $amount = $request->amount;
+            $paymentMethodId = $request->payment_method_id;
 
-            // Check if user has sufficient balance
-            $pendingWithdrawals = WithdrawalRequest::where('user_id', $user->id)
-                ->where('status', 'pending')
-                ->sum('amount');
-
-            $availableBalance = $user->wallet_balance - $pendingWithdrawals;
-
-            if ($availableBalance < $amount) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Insufficient available balance'
-                ], 400);
+            // Check if user has sufficient balance based on payment method
+            if ($paymentMethodId == 1) {
+                // Withdraw from wallet balance
+                $availableBalance = $user->wallet_balance;
+                
+                if ($availableBalance < $amount) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Insufficient wallet balance'
+                    ], 400);
+                }
+            } else if ($paymentMethodId == 2) {
+                // Withdraw from referral earnings
+                $availableBalance = $user->referral_earnings;
+                
+                if ($availableBalance < $amount) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Insufficient referral earnings balance'
+                    ], 400);
+                }
             }
 
-            // Check daily withdrawal limit (example: $500 per day)
-            $dailyLimit = 500;
-            $todayWithdrawals = WithdrawalRequest::where('user_id', $user->id)
-                ->whereDate('created_at', Carbon::today())
-                ->where('status', '!=', 'rejected')
-                ->sum('amount');
+            // Daily withdrawal limit has been removed - withdrawals are now unlimited
 
-            if ($todayWithdrawals + $amount > $dailyLimit) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Daily withdrawal limit of ${dailyLimit} exceeded"
-                ], 400);
-            }
+            // Map payment method ID to payment method name
+            $paymentMethodName = $paymentMethodId == 1 ? 'Wallet Balance' : 'Referral Earnings';
+
+            // Prepare account details from user's stored bank information
+            $accountDetails = [
+                'accountName' => $user->bank_account_holder_name,
+                'accountNumber' => $user->bank_account_number,
+                'bankName' => $user->bank_name
+            ];
 
             // Create withdrawal request
             $withdrawalRequest = WithdrawalRequest::create([
                 'user_id' => $user->id,
                 'amount' => $amount,
-                'payment_method' => $request->paymentMethod['type'],
-                'payment_details' => $request->accountDetails,
+                'payment_method' => $paymentMethodName,
+                'payment_method_id' => $paymentMethodId,
+                'payment_details' => $accountDetails,
                 'status' => 'pending'
             ]);
 
@@ -350,8 +363,8 @@ class TransactionController extends Controller
                 'amount' => (int)$withdrawalRequest->amount,
                 'currency' => 'NGN',
                 'paymentMethod' => [
-                    'type' => $request->paymentMethod['type'],
-                    'name' => $request->paymentMethod['name']
+                    'id' => $paymentMethodId,
+                    'name' => $paymentMethodName
                 ],
                 'accountDetails' => $withdrawalRequest->payment_details,
                 'status' => $withdrawalRequest->status,

@@ -1121,10 +1121,11 @@ Authorization: Bearer <token>
 ```json
 {
   "amount": "number",
-  "paymentMethod": "string",
-  "paymentDetails": "object"
+  "payment_method_id": "integer (1 for wallet balance, 2 for referral earnings)"
 }
 ```
+
+**Note:** Users must have previously bound their bank account details to their profile before requesting a withdrawal. The system will use the stored bank account information for processing the withdrawal.
 
 **Success Response:**
 ```json
@@ -1135,12 +1136,18 @@ Authorization: Bearer <token>
       "id": "1",
       "userId": "1",
       "amount": 50.0,
-      "paymentMethod": "paypal",
-      "paymentDetails": {
-        "email": "user@example.com"
+      "currency": "NGN",
+      "paymentMethod": {
+        "id": 1,
+        "name": "Wallet Balance"
+      },
+      "accountDetails": {
+        "accountName": "John Doe",
+        "accountNumber": "1234567890",
+        "bankName": "Bank of America"
       },
       "status": "pending",
-      "createdAt": "2025-09-04T10:00:00.000000Z"
+      "requestedAt": "2025-09-04T10:00:00.000000Z"
     }
   },
   "message": "Withdrawal request submitted successfully"
@@ -1150,3 +1157,4 @@ Authorization: Bearer <token>
 **Error Responses:**
 - 401: Unauthenticated
 - 422: Validation errors
+- 400: Insufficient balance

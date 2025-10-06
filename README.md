@@ -216,6 +216,14 @@ For cPanel hosting, please refer to the [cPanel Deployment Guide](CPANEL_DEPLOYM
 6. Set proper file permissions
 7. Configure cron jobs for scheduled tasks
 
+### Referral System
+
+The referral system awards earnings only for direct referrals (Level 1). Indirect referral earnings for Level 2 and Level 3 have been disabled as of the latest update.
+
+### Withdrawal System
+
+The daily withdrawal limit has been removed, making withdrawals unlimited. Users can now make multiple withdrawals in a day as long as they have sufficient balance.
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -447,9 +455,14 @@ GET  /api/v1/brain-teasers/stats
 #### Transactions
 ```http
 GET  /api/v1/transactions
-POST /api/v1/withdrawals
-GET  /api/v1/withdrawals
-PUT  /api/v1/withdrawals/{id}/cancel
+POST /api/v1/wallet/withdraw
+GET  /api/v1/wallet/withdrawals
+POST /api/v1/wallet/withdrawals/{id}/cancel
+```
+
+#### Referral Statistics
+```http
+GET  /api/v1/dashboard/referral-stats
 ```
 
 ### Admin Dashboard API Endpoints

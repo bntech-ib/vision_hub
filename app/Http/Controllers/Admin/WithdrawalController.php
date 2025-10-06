@@ -96,16 +96,44 @@ class WithdrawalController extends Controller
             'transaction_id' => 'nullable|string|max:255'
         ]);
 
-        // Check if user has sufficient balance
-        if ($withdrawal->user->wallet_balance < $withdrawal->amount) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User has insufficient balance for this withdrawal'
-            ], 400);
+        // Check if user has sufficient balance based on payment method
+        if ($withdrawal->payment_method_id == 1) {
+            // Check wallet balance
+            if ($withdrawal->user->wallet_balance < $withdrawal->amount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User has insufficient wallet balance for this withdrawal'
+                ], 400);
+            }
+        } else if ($withdrawal->payment_method_id == 2) {
+            // Check referral earnings balance
+            if ($withdrawal->user->referral_earnings < $withdrawal->amount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User has insufficient referral earnings balance for this withdrawal'
+                ], 400);
+            }
+        } else {
+            // Default to wallet balance check
+            if ($withdrawal->user->wallet_balance < $withdrawal->amount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User has insufficient balance for this withdrawal'
+                ], 400);
+            }
         }
 
-        // Deduct amount from user's wallet
-        $withdrawal->user->deductFromWallet($withdrawal->amount);
+        // Deduct amount from appropriate balance
+        if ($withdrawal->payment_method_id == 1) {
+            // Deduct from wallet balance
+            $withdrawal->user->deductFromWallet($withdrawal->amount);
+        } else if ($withdrawal->payment_method_id == 2) {
+            // Deduct from referral earnings
+            $withdrawal->user->deductFromReferralEarnings($withdrawal->amount);
+        } else {
+            // Default to deducting from wallet balance
+            $withdrawal->user->deductFromWallet($withdrawal->amount);
+        }
 
         // Update withdrawal status
         $withdrawal->update([
@@ -127,9 +155,17 @@ class WithdrawalController extends Controller
         //     'transaction_id' => $validated['transaction_id'] ?? 'withdrawal_' . $withdrawal->id
         // ]);
 
+        // Determine message based on payment method
+        $message = 'Withdrawal approved successfully';
+        if ($withdrawal->payment_method_id == 1) {
+            $message = 'Wallet balance withdrawal approved successfully';
+        } else if ($withdrawal->payment_method_id == 2) {
+            $message = 'Referral earnings withdrawal approved successfully';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Withdrawal approved successfully',
+            'message' => $message,
             'withdrawal' => $withdrawal->fresh(['user'])
         ]);
     }

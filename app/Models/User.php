@@ -704,6 +704,9 @@ class User extends Authenticatable
     public function getReferralStats(): array
     {
         $level1Count = $this->referrals()->count();
+        
+        // Note: Level 2 and 3 referral earnings have been disabled
+        // but we still count them for statistical purposes
         $level2Count = 0;
         $level3Count = 0;
         
@@ -726,9 +729,34 @@ class User extends Authenticatable
             'total_count' => $level1Count + $level2Count + $level3Count,
         ];
     }
+
+    /**
+     * Get detailed referral statistics including user information
+     */
+    public function getDetailedReferralStats(): array
+    {
+        // Get level 1 referrals with their package information
+        $referrals = $this->referrals()
+            ->with(['currentPackage'])
+            ->get()
+            ->map(function ($referral) {
+                return [
+                    'id' => $referral->id,
+                    'username' => $referral->username,
+                    'package_name' => $referral->currentPackage ? $referral->currentPackage->name : 'No Package',
+                    'registered_at' => $referral->created_at->toISOString(),
+                ];
+            });
+
+        return [
+            'total_referrals' => $referrals->count(),
+            'referrals' => $referrals->toArray(),
+        ];
+    }
     
     /**
      * Get referral earnings by level
+     * Note: Level 2 and 3 referral earnings have been disabled as of the latest update
      */
     public function getReferralEarningsByLevel(): array
     {
@@ -736,6 +764,7 @@ class User extends Authenticatable
             ->where('level', 1)
             ->sum('amount');
             
+        // Level 2 and 3 earnings are no longer awarded but we still track historical data
         $level2Earnings = ReferralBonus::where('referrer_id', $this->id)
             ->where('level', 2)
             ->sum('amount');

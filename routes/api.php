@@ -80,6 +80,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/dashboard/stats', [\App\Http\Controllers\API\DashboardController::class, 'index']);
     Route::get('/dashboard/earnings', [\App\Http\Controllers\API\DashboardController::class, 'earnings']);
     Route::get('/dashboard/notifications', [\App\Http\Controllers\API\DashboardController::class, 'notifications']);
+    Route::get('/dashboard/referral-stats', [\App\Http\Controllers\API\DashboardController::class, 'referralStats']);
     Route::get('/dashboard/system-stats', [\App\Http\Controllers\API\DashboardController::class, 'systemStats']);
     Route::get('/dashboard/available-ads', [\App\Http\Controllers\API\DashboardController::class, 'availableAds']);
     
@@ -152,6 +153,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::put('/user/profile', [\App\Http\Controllers\API\UserProfileController::class, 'updateProfile']);
     Route::post('/user/bank-account/bind', [\App\Http\Controllers\API\UserProfileController::class, 'bindBankAccount']);
     Route::post('/user/username-by-referral', [\App\Http\Controllers\API\UserProfileController::class, 'getUsernameByReferralCode']);
+    Route::post('/user/package/upgrade', [\App\Http\Controllers\API\UserProfileController::class, 'upgradePackage']);
     
     // Vendor routes
     Route::get('/vendor/access-keys', [\App\Http\Controllers\API\VendorController::class, 'accessKeys']);

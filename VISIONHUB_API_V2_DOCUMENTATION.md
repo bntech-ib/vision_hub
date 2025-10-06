@@ -1308,17 +1308,11 @@ Authorization: Bearer <token>
 ```json
 {
   "amount": "number",
-  "paymentMethod": {
-    "type": "string",
-    "name": "string"
-  },
-  "accountDetails": {
-    "accountName": "string",
-    "accountNumber": "string",
-    "bankName": "string"
-  }
+  "payment_method_id": "integer (1 for wallet balance, 2 for referral earnings)"
 }
 ```
+
+**Note:** Users must have previously bound their bank account details to their profile before requesting a withdrawal. The system will use the stored bank account information for processing the withdrawal.
 
 **Success Response:**
 ```json
@@ -1331,8 +1325,8 @@ Authorization: Bearer <token>
       "amount": 50.0,
       "currency": "NGN",
       "paymentMethod": {
-        "type": "bank_transfer",
-        "name": "Bank Transfer"
+        "id": 1,
+        "name": "Wallet Balance"
       },
       "accountDetails": {
         "accountName": "John Doe",
@@ -1349,9 +1343,49 @@ Authorization: Bearer <token>
 
 **Error Responses:**
 - 401: Unauthenticated
-- 422: Validation errors
-- 400: Insufficient balance or daily limit exceeded
+- 422: Validation errors (including invalid payment_method_id)
+- 400: Insufficient balance or bank account not bound
 - 403: Withdrawal access disabled
+
+### Get Referral Statistics
+**GET** `/dashboard/referral-stats`
+
+Get detailed referral statistics including user information.
+
+**Note:** As of the latest update, referral earnings are only awarded for direct referrals (Level 1). Indirect referral earnings for Level 2 and Level 3 have been disabled.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "total_referrals": 2,
+    "referrals": [
+      {
+        "id": 10,
+        "username": "referraluser1",
+        "package_name": "Premium Package",
+        "registered_at": "2025-09-04T10:00:00.000000Z"
+      },
+      {
+        "id": 11,
+        "username": "referraluser2",
+        "package_name": "Basic Package",
+        "registered_at": "2025-09-05T10:00:00.000000Z"
+      }
+    ]
+  },
+  "message": "Referral statistics retrieved successfully"
+}
+```
+
+**Error Responses:**
+- 401: Unauthenticated
 
 ### Get Withdrawal Requests
 **GET** `/wallet/withdrawals`

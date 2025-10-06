@@ -2087,17 +2087,11 @@ Creates a new withdrawal request.
 ```json
 {
   "amount": 5000,
-  "paymentMethod": {
-    "type": "bank",
-    "name": "Bank Transfer"
-  },
-  "accountDetails": {
-    "accountName": "John Doe",
-    "accountNumber": "1234567890",
-    "bankName": "First Bank"
-  }
+  "payment_method_id": 1
 }
 ```
+
+**Note:** Users must have previously bound their bank account details to their profile before requesting a withdrawal. The system will use the stored bank account information for processing the withdrawal.
 
 **Success Response (201):**
 ```json
@@ -2110,12 +2104,8 @@ Creates a new withdrawal request.
       "amount": 5000,
       "currency": "NGN",
       "paymentMethod": {
-        "type": "bank",
-        "name": "Bank Transfer",
-        "minAmount": 1000,
-        "maxAmount": 100000,
-        "processingTime": "1-3 business days",
-        "fees": 50
+        "id": 1,
+        "name": "Wallet Balance"
       },
       "accountDetails": {
         "accountName": "John Doe",
@@ -2127,6 +2117,37 @@ Creates a new withdrawal request.
     }
   },
   "message": "Withdrawal request submitted successfully"
+}
+```
+
+### GET /api/v1/dashboard/referral-stats
+
+Get detailed referral statistics including user information.
+
+**Note:** As of the latest update, referral earnings are only awarded for direct referrals (Level 1). Indirect referral earnings for Level 2 and Level 3 have been disabled.
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "total_referrals": 2,
+    "referrals": [
+      {
+        "id": 10,
+        "username": "referraluser1",
+        "package_name": "Premium Package",
+        "registered_at": "2025-09-04T10:00:00Z"
+      },
+      {
+        "id": 11,
+        "username": "referraluser2",
+        "package_name": "Basic Package",
+        "registered_at": "2025-09-05T10:00:00Z"
+      }
+    ]
+  },
+  "message": "Referral statistics retrieved successfully"
 }
 ```
 

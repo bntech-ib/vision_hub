@@ -15,6 +15,25 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     /**
+     * Generate a unique referral code
+     * Uses the username if it's unique, otherwise generates a random code
+     */
+    private function generateUniqueReferralCode(string $username): string
+    {
+        // Check if username is already used as a referral code
+        if (!User::where('referral_code', $username)->exists()) {
+            return $username;
+        }
+        
+        // If username is already used, generate a random code
+        do {
+            $referralCode = strtoupper(Str::random(6));
+        } while (User::where('referral_code', $referralCode)->exists());
+        
+        return $referralCode;
+    }
+
+    /**
      * Register a new user
      */
     public function register(Request $request): JsonResponse
@@ -46,6 +65,9 @@ class AuthController extends Controller
             $referrer = User::where('referral_code', $validated['referrerCode'])->first();
         }
 
+        // Generate referral code - use username if unique, otherwise generate random code
+        $referralCode = $this->generateUniqueReferralCode($validated['username']);
+
         // Create user with package from access key
         /** @var User $user */
         $user = User::create([
@@ -55,7 +77,7 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'country' => $validated['country'] ?? null,
             'phone' => $validated['phone'] ?? null,
-            'referral_code' => strtoupper(Str::random(6)), // Generate unique referral code
+            'referral_code' => $referralCode,
             'current_package_id' => $accessKey->package_id,
             'package_expires_at' => $accessKey->package->duration_days ? 
                 now()->addDays((int) $accessKey->package->duration_days) : null,
@@ -102,59 +124,8 @@ class AuthController extends Controller
                 'status' => 'completed',
             ]);
             
-            // Award indirect referral bonus (Level 2)
-            if ($referrer->referredBy) {
-                $level2Bonus = $baseLevel2Bonus;
-                if ($accessKey->package && $accessKey->package->referral_earning_percentage > 0) {
-                    $level2Bonus = (float) $accessKey->package->referral_earning_percentage;
-                }
-                
-                $referrer->referredBy->addToReferralEarnings($level2Bonus);
-                
-                // Log the referral bonus
-                \App\Models\ReferralBonus::create([
-                    'referrer_id' => $referrer->referredBy->id,
-                    'referred_user_id' => $user->id,
-                    'level' => 2,
-                    'amount' => $level2Bonus,
-                    'description' => 'Indirect referral bonus for ' . $user->username,
-                ]);
-                
-                // Log the transaction for the indirect referrer
-                $referrer->referredBy->transactions()->create([
-                    'amount' => $level2Bonus,
-                    'type' => 'referral_earning',
-                    'description' => 'Indirect referral bonus for ' . $user->username,
-                    'status' => 'completed',
-                ]);
-                
-                // Award indirect referral bonus (Level 3)
-                if ($referrer->referredBy->referredBy) {
-                    $level3Bonus = $baseLevel3Bonus;
-                    if ($accessKey->package && $accessKey->package->referral_earning_percentage > 0) {
-                        $level3Bonus = (float) $accessKey->package->referral_earning_percentage;
-                    }
-                    
-                    $referrer->referredBy->referredBy->addToReferralEarnings($level3Bonus);
-                    
-                    // Log the referral bonus
-                    \App\Models\ReferralBonus::create([
-                        'referrer_id' => $referrer->referredBy->referredBy->id,
-                        'referred_user_id' => $user->id,
-                        'level' => 3,
-                        'amount' => $level3Bonus,
-                        'description' => 'Second indirect referral bonus for ' . $user->username,
-                    ]);
-                    
-                    // Log the transaction for the second indirect referrer
-                    $referrer->referredBy->referredBy->transactions()->create([
-                        'amount' => $level3Bonus,
-                        'type' => 'referral_earning',
-                        'description' => 'Second indirect referral bonus for ' . $user->username,
-                        'status' => 'completed',
-                    ]);
-                }
-            }
+            // No referral earnings for level 2 and 3 (as requested)
+            // Level 2 and 3 referral bonuses have been removed
         }
 
         // Award welcome bonus from the package to new user

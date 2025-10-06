@@ -164,6 +164,22 @@ class DashboardController extends Controller
     }
 
     /**
+     * Get detailed referral statistics
+     */
+    public function referralStats(): JsonResponse
+    {
+        $user = Auth::user();
+        
+        $referralStats = $user->getDetailedReferralStats();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $referralStats,
+            'message' => 'Referral statistics retrieved successfully'
+        ]);
+    }
+
+    /**
      * Get system statistics (for admin users)
      */
     public function systemStats(): JsonResponse

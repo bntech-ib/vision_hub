@@ -14,6 +14,7 @@ class WithdrawalRequest extends Model
         'user_id',
         'amount',
         'payment_method',
+        'payment_method_id',
         'payment_details',
         'status',
         'processed_at',
@@ -22,6 +23,7 @@ class WithdrawalRequest extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'payment_method_id' => 'integer',
         'payment_details' => 'array',
         'processed_at' => 'datetime'
     ];
