@@ -810,7 +810,7 @@ class User extends Authenticatable
         }
         
         // If ad_views_limit is 0 or null, it means unlimited
-        $adInteractionLimit = $this->currentPackage->ad_views_limit;
+        $adInteractionLimit = $this->currentPackage && $this->currentPackage->ad_views_limit ? $this->currentPackage->ad_views_limit : 0;
         if (!$adInteractionLimit || $adInteractionLimit == 0) {
             return false;
         }
@@ -835,7 +835,7 @@ class User extends Authenticatable
         }
         
         // If ad_views_limit is 0 or null, it means unlimited
-        $adInteractionLimit = $this->currentPackage->ad_views_limit;
+        $adInteractionLimit = $this->currentPackage && $this->currentPackage->ad_views_limit ? $this->currentPackage->ad_views_limit : 0;
         if (!$adInteractionLimit || $adInteractionLimit == 0) {
             return PHP_INT_MAX; // Unlimited
         }
@@ -902,7 +902,7 @@ class User extends Authenticatable
         }
         
         // Limit the number of ads based on package ad_limits
-        if ($this->hasActivePackage() && $this->currentPackage->ad_limits > 0) {
+        if ($this->hasActivePackage() && $this->currentPackage && $this->currentPackage->ad_limits > 0) {
             $query->limit($this->currentPackage->ad_limits);
         }
         

@@ -54,7 +54,7 @@ class AdController extends Controller
             }
             
             // Apply pagination with package-based limit if applicable
-            if ($user->hasActivePackage() && $user->currentPackage->ad_limits > 0) {
+            if ($user->hasActivePackage() && $user->currentPackage && $user->currentPackage->ad_limits > 0) {
                 $limit = min($limit, $user->currentPackage->ad_limits);
             }
             
@@ -497,7 +497,7 @@ class AdController extends Controller
     }
 
     /**
-     * Get user's ad interaction statistics
+     * Get user's ad statistics
      */
     public function getStats(): JsonResponse
     {
@@ -515,7 +515,7 @@ class AdController extends Controller
             
             // Get package limit
             $dailyLimit = 0;
-            if ($user->hasActivePackage() && $user->currentPackage->ad_views_limit) {
+            if ($user->hasActivePackage() && $user->currentPackage && $user->currentPackage->ad_views_limit) {
                 $dailyLimit = $user->currentPackage->ad_views_limit;
             }
             
