@@ -125,16 +125,8 @@ class User extends Authenticatable
      */
     public function getBankAccountHolderNameAttribute($value)
     {
-        if ($value === null) {
-            return null;
-        }
-        
-        try {
-            return Crypt::decryptString($value);
-        } catch (\Exception $e) {
-            // If decryption fails, return the encrypted value
-            return $value;
-        }
+        // Return the value as-is (no encryption/decryption)
+        return $value;
     }
 
     /**
@@ -144,16 +136,8 @@ class User extends Authenticatable
      */
     public function getBankAccountNumberAttribute($value)
     {
-        if ($value === null) {
-            return null;
-        }
-        
-        try {
-            return Crypt::decryptString($value);
-        } catch (\Exception $e) {
-            // If decryption fails, return the encrypted value
-            return $value;
-        }
+        // Return the value as-is (no encryption/decryption)
+        return $value;
     }
 
     /**
@@ -163,16 +147,8 @@ class User extends Authenticatable
      */
     public function getBankNameAttribute($value)
     {
-        if ($value === null) {
-            return null;
-        }
-        
-        try {
-            return Crypt::decryptString($value);
-        } catch (\Exception $e) {
-            // If decryption fails, return the encrypted value
-            return $value;
-        }
+        // Return the value as-is (no encryption/decryption)
+        return $value;
     }
 
     /**
@@ -182,16 +158,8 @@ class User extends Authenticatable
      */
     public function getBankBranchAttribute($value)
     {
-        if ($value === null) {
-            return null;
-        }
-        
-        try {
-            return Crypt::decryptString($value);
-        } catch (\Exception $e) {
-            // If decryption fails, return the encrypted value
-            return $value;
-        }
+        // Return the value as-is (no encryption/decryption)
+        return $value;
     }
 
     /**
@@ -201,16 +169,8 @@ class User extends Authenticatable
      */
     public function getBankRoutingNumberAttribute($value)
     {
-        if ($value === null) {
-            return null;
-        }
-        
-        try {
-            return Crypt::decryptString($value);
-        } catch (\Exception $e) {
-            // If decryption fails, return the encrypted value
-            return $value;
-        }
+        // Return the value as-is (no encryption/decryption)
+        return $value;
     }
     
     /**
@@ -259,58 +219,63 @@ class User extends Authenticatable
     }
     
     /**
-     * Set the encrypted bank account holder name.
+     * Set the bank account holder name.
      *
      * @param  string|null  $value
      * @return void
      */
     public function setBankAccountHolderNameAttribute($value)
     {
-        $this->attributes['bank_account_holder_name'] = $value !== null ? Crypt::encryptString($value) : null;
+        // Store the value as-is (no encryption)
+        $this->attributes['bank_account_holder_name'] = $value;
     }
 
     /**
-     * Set the encrypted bank account number.
+     * Set the bank account number.
      *
      * @param  string|null  $value
      * @return void
      */
     public function setBankAccountNumberAttribute($value)
     {
-        $this->attributes['bank_account_number'] = $value !== null ? Crypt::encryptString($value) : null;
+        // Store the value as-is (no encryption)
+        $this->attributes['bank_account_number'] = $value;
     }
 
     /**
-     * Set the encrypted bank name.
+     * Set the bank name.
      *
      * @param  string|null  $value
      * @return void
      */
     public function setBankNameAttribute($value)
     {
-        $this->attributes['bank_name'] = $value !== null ? Crypt::encryptString($value) : null;
+        // Store the value as-is (no encryption)
+        $this->attributes['bank_name'] = $value;
     }
 
     /**
-     * Set the encrypted bank branch.
+     * Set the bank branch.
      *
      * @param  string|null  $value
      * @return void
      */
     public function setBankBranchAttribute($value)
     {
-        $this->attributes['bank_branch'] = $value !== null ? Crypt::encryptString($value) : null;
+        // Store the value as-is (no encryption)
+        $this->attributes['bank_branch'] = $value;
     }
 
     /**
-     * Set the encrypted bank routing number.
+     * Set the bank routing number.
      *
      * @param  string|null  $value
      * @return void
      */
     public function setBankRoutingNumberAttribute($value)
     {
-        $this->attributes['bank_routing_number'] = $value !== null ? Crypt::encryptString($value) : null;
+        // Store the value as-is (no encryption)
+        $this->attributes['bank_routing_number'] = $value;
     }
 
     /**
