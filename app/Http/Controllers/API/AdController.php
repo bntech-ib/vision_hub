@@ -29,15 +29,15 @@ class AdController extends Controller
             $limit = $request->get('limit', 10);
             $page = $request->get('page', 1);
             
-            // Check if user has reached their daily ad interaction limit
+            // Check if user has reached their daily ad interaction limit (only 1 ad per day now)
             if ($user->hasReachedDailyAdInteractionLimit()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You have reached your daily ad interaction limit based on your package.'
+                    'message' => 'You have reached your daily ad interaction limit. You can only interact with one ad per day.'
                 ], 403);
             }
             
-            // Get available ads for the user
+            // Get available ads for the user (limited to 1 ad per day)
             $query = $user->getAvailableAdsQuery();
                 
             // Apply category filter if provided
@@ -53,10 +53,8 @@ class AdController extends Controller
                 });
             }
             
-            // Apply pagination with package-based limit if applicable
-            if ($user->hasActivePackage() && $user->currentPackage && $user->currentPackage->ad_limits > 0) {
-                $limit = min($limit, $user->currentPackage->ad_limits);
-            }
+            // Limit to only 1 ad per day
+            $limit = 1;
             
             $ads = $query->paginate($limit, ['*'], 'page', $page);
             
@@ -366,6 +364,14 @@ class AdController extends Controller
             /** @var User $user */
             $user = Auth::user();
             
+            // Log security event for ad interaction
+            $user->logSecurityEvent('ad_interaction_attempt', [
+                'ad_id' => $id,
+                'type' => $request->type ?? 'unknown',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            
             // Validate request
             $validated = $request->validate([
                 'type' => 'required|in:view,click'
@@ -373,6 +379,12 @@ class AdController extends Controller
             
             // Check if user has reached their daily ad interaction limit (for both views and clicks)
             if ($user->hasReachedDailyAdInteractionLimit()) {
+                $user->logSecurityEvent('ad_interaction_blocked', [
+                    'reason' => 'daily_limit_reached',
+                    'ad_id' => $id,
+                    'type' => $validated['type']
+                ], false); // false = unsuccessful attempt
+                
                 return response()->json([
                     'success' => false,
                     'message' => 'You have reached your daily ad interaction limit based on your package.'
@@ -381,10 +393,35 @@ class AdController extends Controller
             
             // Check if ad is active
             if (!$ad->isActive()) {
+                $user->logSecurityEvent('ad_interaction_blocked', [
+                    'reason' => 'ad_not_active',
+                    'ad_id' => $id,
+                    'type' => $validated['type']
+                ], false);
+                
                 return response()->json([
                     'success' => false,
                     'message' => 'This advertisement is not currently active'
                 ], 400);
+            }
+            
+            // Check if user has already interacted with this ad today
+            $alreadyInteracted = AdInteraction::where('user_id', $user->id)
+                ->where('advertisement_id', $ad->id)
+                ->whereDate('interacted_at', today())
+                ->exists();
+                
+            if ($alreadyInteracted) {
+                $user->logSecurityEvent('ad_interaction_blocked', [
+                    'reason' => 'already_interacted_today',
+                    'ad_id' => $id,
+                    'type' => $validated['type']
+                ], false);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have already interacted with this advertisement today. Please try again tomorrow.'
+                ], 403);
             }
             
             // Calculate earning based on user's package
@@ -399,12 +436,18 @@ class AdController extends Controller
                 try {
                     DB::beginTransaction();
 
+                    // For the new system, award all daily earnings from one interaction
+                    $totalDailyEarnings = 0;
+                    if ($user->hasActivePackage() && $user->currentPackage->daily_earning_limit > 0) {
+                        $totalDailyEarnings = $user->currentPackage->daily_earning_limit;
+                    }
+
                     // Record interaction
                     $interaction = AdInteraction::create([
                         'user_id' => $user->id,
                         'advertisement_id' => $ad->id,
                         'type' => 'view',
-                        'reward_earned' => $earningPerAd,
+                        'reward_earned' => $totalDailyEarnings,
                         'interacted_at' => now()
                     ]);
 
@@ -412,52 +455,68 @@ class AdController extends Controller
                     $ad->increment('impressions');
                     
                     // Update ad spend
-                    if ($earningPerAd > 0) {
-                        $ad->increment('spent', $earningPerAd);
+                    if ($totalDailyEarnings > 0) {
+                        $ad->increment('spent', $totalDailyEarnings);
                     }
                     
-                    // Award earnings to user
-                    if ($earningPerAd > 0) {
-                        $user->addToWallet($earningPerAd);
+                    // Award all daily earnings to user
+                    if ($totalDailyEarnings > 0) {
+                        $user->addToWallet($totalDailyEarnings);
                         
                         // Create transaction record
                         Transaction::create([
                             'user_id' => $user->id,
-                            'amount' => $earningPerAd,
+                            'amount' => $totalDailyEarnings,
                             'type' => 'earning',
-                            'description' => "Reward for viewing advertisement #{$ad->id}",
+                            'description' => "Daily earnings from viewing advertisement #{$ad->id}",
                             'status' => 'completed'
                         ]);
                     }
 
                     DB::commit();
+                    
+                    // Log successful interaction
+                    $user->logSecurityEvent('ad_interaction_success', [
+                        'ad_id' => $id,
+                        'type' => 'view',
+                        'reward_earned' => $totalDailyEarnings
+                    ], true); // true = successful attempt
 
                     return response()->json([
                         'success' => true,
                         'data' => [
                             'interaction' => $interaction,
+                            'total_earnings_awarded' => $totalDailyEarnings,
                             'remaining_interactions' => $user->getRemainingDailyAdInteractions()
                         ],
-                        'message' => 'Ad view recorded successfully'
+                        'message' => 'Ad view recorded successfully. You have received your daily earnings.'
                     ]);
                 } catch (\Exception $e) {
                     DB::rollBack();
+                    $user->logSecurityEvent('ad_interaction_error', [
+                        'ad_id' => $id,
+                        'type' => 'view',
+                        'error' => $e->getMessage()
+                    ], false);
                     throw $e;
                 }
             } else {
-                // Record click (2x the view reward)
+                // Record click (same as view, since all earnings come from one interaction)
                 try {
                     DB::beginTransaction();
 
-                    // Calculate click reward (2x view reward)
-                    $clickReward = $earningPerAd * 2;
-                    
+                    // For the new system, award all daily earnings from one interaction
+                    $totalDailyEarnings = 0;
+                    if ($user->hasActivePackage() && $user->currentPackage->daily_earning_limit > 0) {
+                        $totalDailyEarnings = $user->currentPackage->daily_earning_limit;
+                    }
+
                     // Record interaction
                     $interaction = AdInteraction::create([
                         'user_id' => $user->id,
                         'advertisement_id' => $ad->id,
                         'type' => 'click',
-                        'reward_earned' => $clickReward,
+                        'reward_earned' => $totalDailyEarnings,
                         'interacted_at' => now()
                     ]);
 
@@ -465,35 +524,48 @@ class AdController extends Controller
                     $ad->increment('clicks');
                     
                     // Update ad spend
-                    if ($clickReward > 0) {
-                        $ad->increment('spent', $clickReward);
+                    if ($totalDailyEarnings > 0) {
+                        $ad->increment('spent', $totalDailyEarnings);
                     }
                     
-                    // Award earnings to user
-                    if ($clickReward > 0) {
-                        $user->addToWallet($clickReward);
+                    // Award all daily earnings to user
+                    if ($totalDailyEarnings > 0) {
+                        $user->addToWallet($totalDailyEarnings);
                         
                         // Create transaction record
                         Transaction::create([
                             'user_id' => $user->id,
-                            'amount' => $clickReward,
+                            'amount' => $totalDailyEarnings,
                             'type' => 'earning',
-                            'description' => "Reward for clicking advertisement #{$ad->id}",
+                            'description' => "Daily earnings from clicking advertisement #{$ad->id}",
                             'status' => 'completed'
                         ]);
                     }
 
                     DB::commit();
+                    
+                    // Log successful interaction
+                    $user->logSecurityEvent('ad_interaction_success', [
+                        'ad_id' => $id,
+                        'type' => 'click',
+                        'reward_earned' => $totalDailyEarnings
+                    ], true);
 
                     return response()->json([
                         'success' => true,
                         'data' => [
-                            'interaction' => $interaction
+                            'interaction' => $interaction,
+                            'total_earnings_awarded' => $totalDailyEarnings
                         ],
-                        'message' => 'Ad click recorded successfully'
+                        'message' => 'Ad click recorded successfully. You have received your daily earnings.'
                     ]);
                 } catch (\Exception $e) {
                     DB::rollBack();
+                    $user->logSecurityEvent('ad_interaction_error', [
+                        'ad_id' => $id,
+                        'type' => 'click',
+                        'error' => $e->getMessage()
+                    ], false);
                     throw $e;
                 }
             }

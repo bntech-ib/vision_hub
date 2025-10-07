@@ -75,12 +75,16 @@ class UserPackage extends Package
      */
     public function calculateEarningPerAd(): float
     {
-        // For both limited and unlimited packages, use the same formula
-        // If ad_limits is 0 (unlimited), division by zero would occur
-        // To avoid this, we'll use a very small number instead of 0 for unlimited packages
-        $adLimits = $this->ad_limits > 0 ? $this->ad_limits : 1;
+        // If ad_limits is 0, it means unlimited interactions
+        // In this case, we should still calculate a reward based on a reasonable default
+        // or return a fixed small amount to encourage interaction
+        if (!$this->ad_limits || $this->ad_limits == 0) {
+            // For unlimited packages, we'll calculate based on a default of 1000 interactions
+            // This gives a reasonable reward while still allowing unlimited interactions
+            return $this->daily_earning_limit / 1000;
+        }
         
         // Calculate earning per ad = daily earning limit / ad limits
-        return $this->daily_earning_limit / $adLimits;
+        return $this->daily_earning_limit / $this->ad_limits;
     }
 }

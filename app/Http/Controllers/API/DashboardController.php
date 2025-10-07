@@ -244,22 +244,38 @@ class DashboardController extends Controller
             ]);
         }
 
-        $availableAds = Advertisement::where('status', 'active')
-            ->where('start_date', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', now());
-            })
-            ->where(function ($query) {
-                $query->where('max_views', 0)
-                      ->orWhereRaw('current_views < max_views');
-            })
-            // Also check that ad spend hasn't reached budget
-            ->where(function ($query) {
-                $query->where('budget', 0)
-                      ->orWhereRaw('spent < budget');
-            })
-            ->count();
+        // Check if user has already interacted with an ad today
+        $alreadyInteracted = $user->adInteractions()
+            ->whereDate('interacted_at', today())
+            ->exists();
+            
+        $availableAds = 0;
+        if (!$alreadyInteracted) {
+            $availableAds = Advertisement::where('status', 'active')
+                ->where('start_date', '<=', now())
+                ->where(function ($query) {
+                    $query->whereNull('end_date')
+                          ->orWhere('end_date', '>=', now());
+                })
+                ->where(function ($query) {
+                    $query->where('max_views', 0)
+                          ->orWhereRaw('current_views < max_views');
+                })
+                // Also check that ad spend hasn't reached budget
+                ->where(function ($query) {
+                    $query->where('budget', 0)
+                          ->orWhereRaw('spent < budget');
+                })
+                // Exclude ads that the user has already interacted with today
+                ->whereNotIn('id', function($query) use ($user) {
+                    $query->select('advertisement_id')
+                          ->from('ad_interactions')
+                          ->where('user_id', $user->id)
+                          ->whereDate('interacted_at', today());
+                })
+                ->limit(1) // Only one ad per day
+                ->count();
+        }
 
         return response()->json([
             'success' => true,

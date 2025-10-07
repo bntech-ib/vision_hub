@@ -810,18 +810,12 @@ class User extends Authenticatable
             return false;
         }
         
-        // If ad_limits is 0 or null, it means unlimited
-        $adInteractionLimit = $this->currentPackage && $this->currentPackage->ad_limits ? $this->currentPackage->ad_limits : 0;
-        if (!$adInteractionLimit || $adInteractionLimit == 0) {
-            return false;
-        }
-        
-        // Count all ad interactions (both views and clicks) for the current day
+        // In the new system, users can only interact with one ad per day
         $adInteractionsToday = $this->adInteractions()
             ->whereDate('interacted_at', now()->toDateString())
             ->count();
             
-        return $adInteractionsToday >= $adInteractionLimit;
+        return $adInteractionsToday >= 1;
     }
     
     /**
@@ -829,23 +823,17 @@ class User extends Authenticatable
      */
     public function getRemainingDailyAdInteractions(): int
     {
-        // If user doesn't have an active package, they have unlimited interactions
+        // If user doesn't have an active package, they have no interactions
         if (!$this->hasActivePackage()) {
-            return PHP_INT_MAX; // Unlimited
+            return 0;
         }
         
-        // If ad_limits is 0 or null, it means unlimited
-        $adInteractionLimit = $this->currentPackage && $this->currentPackage->ad_limits ? $this->currentPackage->ad_limits : 0;
-        if (!$adInteractionLimit || $adInteractionLimit == 0) {
-            return PHP_INT_MAX; // Unlimited
-        }
-        
-        // Count all ad interactions (both views and clicks) for the current day
+        // In the new system, users can only interact with one ad per day
         $adInteractionsToday = $this->adInteractions()
             ->whereDate('interacted_at', now()->toDateString())
             ->count();
             
-        return max(0, $adInteractionLimit - $adInteractionsToday);
+        return max(0, 1 - $adInteractionsToday);
     }
     
     /**
@@ -897,18 +885,17 @@ class User extends Authenticatable
                   ->orWhereRaw('spent < budget');
             });
             
-        // Exclude ads that the user has already interacted with (viewed or clicked)
+        // Exclude ads that the user has already interacted with today
         $interactedAdIds = $this->adInteractions()
+            ->whereDate('interacted_at', today())
             ->pluck('advertisement_id');
             
         if ($interactedAdIds->isNotEmpty()) {
             $query->whereNotIn('id', $interactedAdIds);
         }
         
-        // Limit the number of ads based on package ad_limits
-        if ($this->hasActivePackage() && $this->currentPackage && $this->currentPackage->ad_limits > 0) {
-            $query->limit($this->currentPackage->ad_limits);
-        }
+        // Limit to only 1 ad per day
+        $query->limit(1);
         
         return $query;
     }
