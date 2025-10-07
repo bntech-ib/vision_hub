@@ -78,6 +78,11 @@ class Advertisement extends Model
             return false;
         }
         
+        // Check if ad spend has reached or exceeded budget
+        if ($this->budget > 0 && $this->spent >= $this->budget) {
+            return false;
+        }
+        
         return true;
     }
 

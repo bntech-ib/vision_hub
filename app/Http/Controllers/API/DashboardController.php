@@ -254,6 +254,11 @@ class DashboardController extends Controller
                 $query->where('max_views', 0)
                       ->orWhereRaw('current_views < max_views');
             })
+            // Also check that ad spend hasn't reached budget
+            ->where(function ($query) {
+                $query->where('budget', 0)
+                      ->orWhereRaw('spent < budget');
+            })
             ->count();
 
         return response()->json([

@@ -816,9 +816,8 @@ class User extends Authenticatable
             return false;
         }
         
-        // Count ad interactions for the current day
+        // Count all ad interactions (both views and clicks) for the current day
         $adInteractionsToday = $this->adInteractions()
-            ->where('type', 'view')
             ->whereDate('interacted_at', now()->toDateString())
             ->count();
             
@@ -841,9 +840,8 @@ class User extends Authenticatable
             return PHP_INT_MAX; // Unlimited
         }
         
-        // Count ad interactions for the current day
+        // Count all ad interactions (both views and clicks) for the current day
         $adInteractionsToday = $this->adInteractions()
-            ->where('type', 'view')
             ->whereDate('interacted_at', now()->toDateString())
             ->count();
             
@@ -886,12 +884,17 @@ class User extends Authenticatable
      */
     public function getAvailableAdsQuery()
     {
-        // Start with active ads
+        // Start with active ads (this now also checks budget)
         $query = Advertisement::where('status', 'active')
             ->where('start_date', '<=', now())
             ->where(function($q) {
                 $q->whereNull('end_date')
                   ->orWhere('end_date', '>=', now());
+            })
+            // Also check that ad spend hasn't reached budget
+            ->where(function($q) {
+                $q->where('budget', 0)
+                  ->orWhereRaw('spent < budget');
             });
             
         // Exclude ads that the user has already interacted with (viewed or clicked)

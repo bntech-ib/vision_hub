@@ -371,8 +371,8 @@ class AdController extends Controller
                 'type' => 'required|in:view,click'
             ]);
             
-            // Check if user has reached their daily ad interaction limit (only for views)
-            if ($validated['type'] === 'view' && $user->hasReachedDailyAdInteractionLimit()) {
+            // Check if user has reached their daily ad interaction limit (for both views and clicks)
+            if ($user->hasReachedDailyAdInteractionLimit()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You have reached your daily ad interaction limit based on your package.'
@@ -410,6 +410,11 @@ class AdController extends Controller
 
                     // Update ad statistics
                     $ad->increment('impressions');
+                    
+                    // Update ad spend
+                    if ($earningPerAd > 0) {
+                        $ad->increment('spent', $earningPerAd);
+                    }
                     
                     // Award earnings to user
                     if ($earningPerAd > 0) {
@@ -458,6 +463,11 @@ class AdController extends Controller
 
                     // Update ad statistics
                     $ad->increment('clicks');
+                    
+                    // Update ad spend
+                    if ($clickReward > 0) {
+                        $ad->increment('spent', $clickReward);
+                    }
                     
                     // Award earnings to user
                     if ($clickReward > 0) {
