@@ -130,7 +130,7 @@
                                         <i class="bi bi-key"></i>
                                     </span>
                                     <input 
-                                        type="password" 
+                                        type="text" 
                                         class="form-control @error('password') is-invalid @enderror" 
                                         id="password" 
                                         name="password" 

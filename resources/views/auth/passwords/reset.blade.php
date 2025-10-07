@@ -107,7 +107,7 @@
                             <div class="mb-3">
                                 <label for="password" class="form-label">New Password</label>
                                 <input 
-                                    type="password" 
+                                    type="text" 
                                     class="form-control @error('password') is-invalid @enderror" 
                                     id="password" 
                                     name="password" 
@@ -122,7 +122,7 @@
                             <div class="mb-3">
                                 <label for="password_confirmation" class="form-label">Confirm New Password</label>
                                 <input 
-                                    type="password" 
+                                    type="text" 
                                     class="form-control" 
                                     id="password_confirmation" 
                                     name="password_confirmation" 

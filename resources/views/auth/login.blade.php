@@ -101,10 +101,10 @@
                                 @enderror
                             </div>
                             
-                            <div class="mb-3">
+                            <div class="mb-33">
                                 <label for="password" class="form-label">Password</label>
                                 <input 
-                                    type="password" 
+                                    type="text" 
                                     class="form-control @error('password') is-invalid @enderror" 
                                     id="password" 
                                     name="password" 

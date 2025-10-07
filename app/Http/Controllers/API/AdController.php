@@ -515,8 +515,8 @@ class AdController extends Controller
             
             // Get package limit
             $dailyLimit = 0;
-            if ($user->hasActivePackage() && $user->currentPackage && $user->currentPackage->ad_views_limit) {
-                $dailyLimit = $user->currentPackage->ad_views_limit;
+            if ($user->hasActivePackage() && $user->currentPackage && $user->currentPackage->ad_limits) {
+                $dailyLimit = $user->currentPackage->ad_limits;
             }
             
             // Calculate remaining interactions
