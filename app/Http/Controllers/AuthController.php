@@ -42,7 +42,7 @@ class AuthController extends Controller
             'fullName' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8',
             'country' => 'nullable|string|max:255',
             'referralCode' => 'nullable|string|exists:users,referral_code',
             'accessKey' => 'required|string|exists:access_keys,key,is_used,0,is_active,1',
