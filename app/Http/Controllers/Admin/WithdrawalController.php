@@ -42,10 +42,35 @@ class WithdrawalController extends Controller
             $query->where('payment_method', $request->payment_method);
         }
 
+        if ($request->filled('amount_min')) {
+            $query->where('amount', '>=', $request->amount_min);
+        }
+
+        if ($request->filled('amount_max')) {
+            $query->where('amount', '<=', $request->amount_max);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->where('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+        }
+
         $withdrawals = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('admin.withdrawals.index', compact('withdrawals'));
+        // Calculate stats
+        $stats = [
+            'total_withdrawals' => WithdrawalRequest::count(),
+            'pending_withdrawals' => WithdrawalRequest::where('status', 'pending')->count(),
+            'approved_withdrawals' => WithdrawalRequest::where('status', 'approved')->count(),
+            'total_amount_pending' => WithdrawalRequest::where('status', 'pending')->sum('amount'),
+            'total_amount_approved' => WithdrawalRequest::where('status', 'approved')->sum('amount'),
+        ];
+
+        return view('admin.withdrawals.index', compact('withdrawals', 'stats'));
     }
 
     /**
@@ -101,7 +126,7 @@ class WithdrawalController extends Controller
             'processed_at' => now(),
             'processed_by' => Auth::id(),
             'notes' => $validated['notes'] ?? null,
-            'transaction_id' => $validated['transaction_id'] ?? null
+            'transaction_id' => $validated['transaction_id'] ?? 'withdrawal_' . $withdrawal->id
         ]);
 
         // Update the transaction record status
@@ -200,7 +225,7 @@ class WithdrawalController extends Controller
             // Create refund transaction record
             Transaction::create([
                 'user_id' => $withdrawal->user_id,
-                'type' => 'withdrawal_refund',
+                'type' => 'refund',
                 'amount' => $withdrawal->amount, // Positive amount for refunds
                 'description' => 'Withdrawal rejected - ' . ($withdrawal->payment_method_id == 1 ? 'Wallet Balance' : 'Referral Earnings') . ' refunded',
                 'status' => 'completed',

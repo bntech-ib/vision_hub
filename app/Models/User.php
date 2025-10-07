@@ -514,6 +514,42 @@ class User extends Authenticatable
     }
 
     /**
+     * Get today's earnings
+     */
+    public function getTodayEarnings(): float
+    {
+        return (float) $this->transactions()
+            ->whereIn('type', ['earning', 'referral_earning'])
+            ->where('status', 'completed')
+            ->whereDate('created_at', today())
+            ->sum('amount');
+    }
+
+    /**
+     * Get today's normal earnings (from ad interactions)
+     */
+    public function getTodayNormalEarnings(): float
+    {
+        return (float) $this->transactions()
+            ->where('type', 'earning')
+            ->where('status', 'completed')
+            ->whereDate('created_at', today())
+            ->sum('amount');
+    }
+
+    /**
+     * Get today's referral earnings
+     */
+    public function getTodayReferralEarnings(): float
+    {
+        return (float) $this->transactions()
+            ->where('type', 'referral_earning')
+            ->where('status', 'completed')
+            ->whereDate('created_at', today())
+            ->sum('amount');
+    }
+
+    /**
      * Get normal earnings (wallet balance)
      */
     public function getNormalEarnings(): float
@@ -774,8 +810,8 @@ class User extends Authenticatable
             return false;
         }
         
-        // If ad_views_limit is 0 or null, it means unlimited
-        $adInteractionLimit = $this->currentPackage && $this->currentPackage->ad_views_limit ? $this->currentPackage->ad_views_limit : 0;
+        // If ad_limits is 0 or null, it means unlimited
+        $adInteractionLimit = $this->currentPackage && $this->currentPackage->ad_limits ? $this->currentPackage->ad_limits : 0;
         if (!$adInteractionLimit || $adInteractionLimit == 0) {
             return false;
         }
@@ -799,8 +835,8 @@ class User extends Authenticatable
             return PHP_INT_MAX; // Unlimited
         }
         
-        // If ad_views_limit is 0 or null, it means unlimited
-        $adInteractionLimit = $this->currentPackage && $this->currentPackage->ad_views_limit ? $this->currentPackage->ad_views_limit : 0;
+        // If ad_limits is 0 or null, it means unlimited
+        $adInteractionLimit = $this->currentPackage && $this->currentPackage->ad_limits ? $this->currentPackage->ad_limits : 0;
         if (!$adInteractionLimit || $adInteractionLimit == 0) {
             return PHP_INT_MAX; // Unlimited
         }

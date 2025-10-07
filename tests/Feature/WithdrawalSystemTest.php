@@ -217,7 +217,7 @@ class WithdrawalSystemTest extends TestCase
         // Check that refund transaction was created
         $this->assertDatabaseHas('transactions', [
             'user_id' => $this->user->id,
-            'type' => 'withdrawal_refund',
+            'type' => 'refund',
             'amount' => 100,
             'status' => 'completed'
         ]);

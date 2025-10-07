@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\AccessKey;
+use App\Models\ReferralBonus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -82,8 +83,34 @@ class AuthController extends Controller
 
         // Award referral bonus to referring user (only for level 1 referrals)
         if ($referredBy) {
-            // Only award referral bonus for level 1 referrals
-            // Level 2 and 3 referral bonuses have been removed
+            // Calculate referral bonus based on the package that was applied to the new user
+            $baseLevel1Bonus = 100; // Default base bonus for level 1
+            $level1Bonus = $baseLevel1Bonus;
+            
+            // If the package has a referral earning percentage set, use that as the fixed amount
+            if ($accessKey->package && $accessKey->package->referral_earning_percentage > 0) {
+                $level1Bonus = (float) $accessKey->package->referral_earning_percentage;
+            }
+            
+            // Award direct referral bonus (Level 1) to referral earnings
+            $referredBy->addToReferralEarnings($level1Bonus);
+            
+            // Log the referral bonus
+            ReferralBonus::create([
+                'referrer_id' => $referredBy->id,
+                'referred_user_id' => $user->id,
+                'level' => 1,
+                'amount' => $level1Bonus,
+                'description' => 'Direct referral bonus for ' . $user->username,
+            ]);
+            
+            // Log the transaction for the referrer
+            $referredBy->transactions()->create([
+                'amount' => $level1Bonus,
+                'type' => 'referral_earning',
+                'description' => 'Direct referral bonus for ' . $user->username,
+                'status' => 'completed',
+            ]);
         }
 
         // Award welcome bonus from the package to new user
@@ -100,6 +127,9 @@ class AuthController extends Controller
                 'status' => 'completed',
             ]);
         }
+
+        // Mark access key as used
+        $accessKey->update(['is_used' => true, 'used_by' => $user->id]);
 
         // Create API token
         $token = $user->createToken('auth-token')->plainTextToken;

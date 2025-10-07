@@ -11,19 +11,34 @@ The ad earning system allows users to earn rewards by interacting with advertise
 The reward amount is calculated based on the user's package settings:
 
 ```
+For Limited Packages:
 View Reward = daily_earning_limit / ad_limits
+Click Reward = 2 × View Reward
+
+For Unlimited Packages (ad_limits = 0):
+View Reward = daily_earning_limit / 1000
 Click Reward = 2 × View Reward
 ```
 
-**Example:**
+**Example for Limited Package:**
 - Package daily_earning_limit: $10.00
 - Package ad_limits: 20 interactions per day
 - View Reward: $10.00 / 20 = $0.50 per view
 - Click Reward: 2 × $0.50 = $1.00 per click
 
+**Example for Unlimited Package:**
+- Package daily_earning_limit: $10,000.00
+- Package ad_limits: 0 (unlimited interactions)
+- View Reward: $10,000.00 / 1000 = $10.00 per view
+- Click Reward: 2 × $10.00 = $20.00 per click
+
 ### 2. Daily Limits
 
-Users are limited by their package's `ad_limits` setting. Once a user reaches their daily limit, they cannot earn more rewards from ad interactions until the next day.
+Users are limited by their package's `ad_limits` setting. 
+- When `ad_limits` > 0: Users can interact up to that many times per day
+- When `ad_limits` = 0: Users have unlimited interactions per day
+
+Once a user reaches their daily limit (for limited packages), they cannot earn more rewards from ad interactions until the next day.
 
 ### 3. Earning Process
 
@@ -60,14 +75,16 @@ POST /api/v1/ads/{ad_id}/interact
       "user_id": "1",
       "advertisement_id": "1",
       "type": "view",
-      "reward_earned": 0.5,
+      "reward_earned": 10.00,
       "interacted_at": "2025-01-01T10:00:00.000000Z"
     },
-    "remaining_interactions": 19
+    "remaining_interactions": 9223372036854775807
   },
   "message": "Ad view recorded successfully"
 }
 ```
+
+**Note:** For unlimited packages, `remaining_interactions` will show a very large number (PHP_INT_MAX) indicating unlimited interactions.
 
 ### Get Ad Statistics
 
@@ -82,13 +99,15 @@ GET /api/v1/ads/stats
   "data": {
     "today_views": 5,
     "today_clicks": 2,
-    "daily_limit": 20,
-    "remaining_interactions": 13,
+    "daily_limit": 0,
+    "remaining_interactions": 9223372036854775807,
     "has_reached_limit": false
   },
   "message": "Ad statistics retrieved successfully"
 }
 ```
+
+**Note:** For unlimited packages, `daily_limit` will be 0 and `remaining_interactions` will show a very large number.
 
 ### Get Ad Interaction History
 
@@ -106,7 +125,7 @@ GET /api/v1/ads/history/my-interactions
         "id": "1",
         "advertisement_id": "1",
         "type": "view",
-        "reward_earned": 0.5,
+        "reward_earned": 10.00,
         "interacted_at": "2025-01-01T10:00:00.000000Z",
         "advertisement": {
           "id": "1",
@@ -136,7 +155,7 @@ The following package fields control the ad earning system:
 | Field | Description | Default |
 |-------|-------------|---------|
 | `daily_earning_limit` | Maximum earnings per day | 0.00 |
-| `ad_limits` | Maximum ad interactions per day | 0 |
+| `ad_limits` | Maximum ad interactions per day (0 = unlimited) | 0 |
 
 ## Database Tables
 
@@ -192,6 +211,14 @@ php artisan test --filter=AdEarningTest
 7. Adds reward to user's wallet
 8. Creates transaction record
 9. Returns success response with interaction details
+
+### Unlimited Package Handling
+
+For packages with `ad_limits` = 0:
+- The system uses a default value of 1000 interactions for calculation purposes
+- Users have unlimited actual interactions per day
+- Reward calculation: `daily_earning_limit / 1000`
+- Remaining interactions shows PHP_INT_MAX (9223372036854775807)
 
 ## Error Handling
 

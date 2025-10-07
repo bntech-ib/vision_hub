@@ -31,10 +31,10 @@ echo "      \"id\": \"1\",\n";
 echo "      \"user_id\": \"1\",\n";
 echo "      \"advertisement_id\": \"1\",\n";
 echo "      \"type\": \"view\",\n";
-echo "      \"reward_earned\": 0.5,\n";
+echo "      \"reward_earned\": 10.00,\n";
 echo "      \"interacted_at\": \"2025-01-01T10:00:00.000000Z\"\n";
 echo "    },\n";
-echo "    \"remaining_interactions\": 9\n";
+echo "    \"remaining_interactions\": 9223372036854775807\n";
 echo "  },\n";
 echo "  \"message\": \"Ad view recorded successfully\"\n";
 echo "}\n\n";
@@ -50,18 +50,28 @@ echo "   - Awards the reward to the user's wallet\n";
 echo "   - Creates a transaction record\n\n";
 
 echo "2. Reward Calculation:\n";
+echo "   For Limited Packages:\n";
 echo "   - View reward = daily_earning_limit / ad_limits (from user's package)\n";
+echo "   - Click reward = 2 × view reward\n\n";
+echo "   For Unlimited Packages (ad_limits = 0):\n";
+echo "   - View reward = daily_earning_limit / 1000\n";
 echo "   - Click reward = 2 × view reward\n\n";
 
 echo "3. Package Fields Used:\n";
 echo "   - daily_earning_limit: Maximum earnings per day\n";
-echo "   - ad_limits: Maximum ad interactions per day\n\n";
+echo "   - ad_limits: Maximum ad interactions per day (0 = unlimited)\n\n";
 
-echo "4. Example:\n";
+echo "4. Examples:\n";
+echo "   Limited Package:\n";
 echo "   - Package daily_earning_limit = $10\n";
 echo "   - Package ad_limits = 20 interactions\n";
 echo "   - View reward = $10 / 20 = $0.50 per view\n";
 echo "   - Click reward = 2 × $0.50 = $1.00 per click\n\n";
+echo "   Unlimited Package:\n";
+echo "   - Package daily_earning_limit = $10,000\n";
+echo "   - Package ad_limits = 0 (unlimited)\n";
+echo "   - View reward = $10,000 / 1000 = $10.00 per view\n";
+echo "   - Click reward = 2 × $10.00 = $20.00 per click\n\n";
 
 echo "=== API Endpoints Related to Ad Earnings ===\n\n";
 

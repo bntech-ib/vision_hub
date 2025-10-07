@@ -1,14 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Str;
-use App\Models\User;
+use App\Http\Controllers\ApiController;
 use App\Models\AccessKey;
-use App\Models\UserPackage;
+use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -195,7 +195,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/password/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('/password/reset', [ForgotPasswordController::class, 'reset'])->name('password.update');
 
-    Route::post('/web-login', function (\Illuminate\Http\Request $request) {
+    Route::post('/web-login', function (Request $request) {
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required'
@@ -204,7 +204,9 @@ Route::middleware('guest')->group(function () {
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             
-            if (Auth::user()->isAdmin()) {
+            /** @var User $user */
+            $user = Auth::user();
+            if ($user && method_exists($user, 'isAdmin') && $user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
             }
             
@@ -216,7 +218,7 @@ Route::middleware('guest')->group(function () {
         ]);
     })->name('login.post');
 
-    Route::post('/admin/login', function (\Illuminate\Http\Request $request) {
+    Route::post('/admin/login', function (Request $request) {
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required'
@@ -225,7 +227,9 @@ Route::middleware('guest')->group(function () {
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             
-            if (Auth::user()->isAdmin()) {
+            /** @var User $user */
+            $user = Auth::user();
+            if ($user && method_exists($user, 'isAdmin') && $user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
             }
             
@@ -246,7 +250,7 @@ Route::middleware('auth')->group(function () {
         return view('home');
     })->name('home');
     
-    Route::post('/logout', function (\Illuminate\Http\Request $request) {
+    Route::post('/logout', function (Request $request) {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

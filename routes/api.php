@@ -85,14 +85,14 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/dashboard/available-ads', [\App\Http\Controllers\API\DashboardController::class, 'availableAds']);
     
     // Advertisement routes
+    Route::get('/ads/stats', [\App\Http\Controllers\API\AdController::class, 'getStats']);
+    Route::get('/ads/history/my-interactions', [\App\Http\Controllers\API\AdController::class, 'myInteractions']);
     Route::get('/ads', [\App\Http\Controllers\API\AdController::class, 'index']);
     Route::post('/ads', [\App\Http\Controllers\API\AdController::class, 'store']);
     Route::get('/ads/{id}', [\App\Http\Controllers\API\AdController::class, 'show']);
     Route::put('/ads/{id}', [\App\Http\Controllers\API\AdController::class, 'update']);
     Route::delete('/ads/{id}', [\App\Http\Controllers\API\AdController::class, 'destroy']);
     Route::post('/ads/{id}/interact', [\App\Http\Controllers\API\AdController::class, 'interact']);
-    Route::get('/ads/history/my-interactions', [\App\Http\Controllers\API\AdController::class, 'myInteractions']);
-    Route::get('/ads/stats', [\App\Http\Controllers\API\AdController::class, 'getStats']);
     
     // Product routes
     Route::get('/products', [\App\Http\Controllers\API\ProductController::class, 'index']);

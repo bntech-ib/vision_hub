@@ -58,23 +58,23 @@ class SupportController extends Controller
     /**
      * Display the specified support option.
      */
-    public function show(SupportOption $supportOption): View
+    public function show(SupportOption $support): View
     {
-        return view('admin.support.show', compact('supportOption'));
+        return view('admin.support.show', compact('support'));
     }
 
     /**
      * Show the form for editing the specified support option.
      */
-    public function edit(SupportOption $supportOption): View
+    public function edit(SupportOption $support): View
     {
-        return view('admin.support.edit', compact('supportOption'));
+        return view('admin.support.edit', compact('support'));
     }
 
     /**
      * Update the specified support option in storage.
      */
-    public function update(Request $request, SupportOption $supportOption): RedirectResponse
+    public function update(Request $request, SupportOption $support): RedirectResponse
     {
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -89,14 +89,14 @@ class SupportController extends Controller
         // Handle avatar upload
         if ($request->hasFile('avatar')) {
             // Delete old avatar if it exists
-            if ($supportOption->avatar) {
-                Storage::disk('public')->delete($supportOption->avatar);
+            if ($support->avatar) {
+                Storage::disk('public')->delete($support->avatar);
             }
             
             $validated['avatar'] = $request->file('avatar')->store('support-avatars', 'public');
         }
 
-        $supportOption->update($validated);
+        $support->update($validated);
 
         return redirect()->route('admin.support.index')
             ->with('success', 'Support option updated successfully.');

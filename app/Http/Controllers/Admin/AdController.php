@@ -138,7 +138,7 @@ class AdController extends Controller
      */
     public function show(Advertisement $ad)
     {
-        $ad->load(['advertiser:id,name,email', 'interactions' => function($q) {
+        $ad->load(['advertiser:id,name,email', 'adInteractions' => function($q) {
             $q->latest()->limit(10);
         }]);
         

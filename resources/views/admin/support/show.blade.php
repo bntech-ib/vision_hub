@@ -14,21 +14,21 @@
                             <table class="table table-borderless">
                                 <tr>
                                     <th>ID:</th>
-                                    <td>{{ $supportOption->id }}</td>
+                                    <td>{{ $support->id }}</td>
                                 </tr>
                                 <tr>
                                     <th>Title:</th>
-                                    <td>{{ $supportOption->title }}</td>
+                                    <td>{{ $support->title }}</td>
                                 </tr>
                                 <tr>
                                     <th>Description:</th>
-                                    <td>{{ $supportOption->description }}</td>
+                                    <td>{{ $support->description }}</td>
                                 </tr>
                                 <tr>
                                     <th>Avatar:</th>
                                     <td>
-                                        @if($supportOption->avatar)
-                                            <img src="{{ Storage::url($supportOption->avatar) }}" alt="Avatar" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                                        @if($support->avatar)
+                                            <img src="{{ Storage::url($support->avatar) }}" alt="Avatar" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
                                         @else
                                             <span class="text-muted">None</span>
                                         @endif
@@ -36,7 +36,7 @@
                                 </tr>
                                 <tr>
                                     <th>Sort Order:</th>
-                                    <td>{{ $supportOption->sort_order }}</td>
+                                    <td>{{ $support->sort_order }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -44,16 +44,16 @@
                             <table class="table table-borderless">
                                 <tr>
                                     <th>WhatsApp Number:</th>
-                                    <td>{{ $supportOption->whatsapp_number ?? 'N/A' }}</td>
+                                    <td>{{ $support->whatsapp_number ?? 'N/A' }}</td>
                                 </tr>
                                 <tr>
                                     <th>WhatsApp Message:</th>
-                                    <td>{{ $supportOption->whatsapp_message ?? 'N/A' }}</td>
+                                    <td>{{ $support->whatsapp_message ?? 'N/A' }}</td>
                                 </tr>
                                 <tr>
                                     <th>Status:</th>
                                     <td>
-                                        @if($supportOption->is_active)
+                                        @if($support->is_active)
                                             <span class="badge bg-success">Active</span>
                                         @else
                                             <span class="badge bg-secondary">Inactive</span>
@@ -62,11 +62,11 @@
                                 </tr>
                                 <tr>
                                     <th>Created At:</th>
-                                    <td>{{ $supportOption->created_at ? $supportOption->created_at->format('M d, Y H:i:s') : 'N/A' }}</td>
+                                    <td>{{ $support->created_at ? $support->created_at->format('M d, Y H:i:s') : 'N/A' }}</td>
                                 </tr>
                                 <tr>
                                     <th>Updated At:</th>
-                                    <td>{{ $supportOption->updated_at ? $supportOption->updated_at->format('M d, Y H:i:s') : 'N/A' }}</td>
+                                    <td>{{ $support->updated_at ? $support->updated_at->format('M d, Y H:i:s') : 'N/A' }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -77,10 +77,10 @@
                             <i class="bi bi-arrow-left"></i> Back to Support Options
                         </a>
                         <div>
-                            <a href="{{ route('admin.support.edit', $supportOption) }}" class="btn btn-warning">
+                            <a href="{{ route('admin.support.edit', $support) }}" class="btn btn-warning">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>
-                            <form action="{{ route('admin.support.destroy', $supportOption) }}" 
+                            <form action="{{ route('admin.support.destroy', $support) }}" 
                                   method="POST" 
                                   onsubmit="return confirm('Are you sure you want to delete this support option?');"
                                   class="d-inline">

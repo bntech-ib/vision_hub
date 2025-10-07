@@ -96,4 +96,12 @@ class Advertisement extends Model
     {
         return $this->hasMany(AdInteraction::class);
     }
+
+    /**
+     * Alias for adInteractions to maintain compatibility with code expecting 'interactions' relationship
+     */
+    public function interactions(): HasMany
+    {
+        return $this->adInteractions();
+    }
 }

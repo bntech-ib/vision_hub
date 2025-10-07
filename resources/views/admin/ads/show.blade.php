@@ -109,20 +109,24 @@
                     @if($ad->status == 'pending')
                         <form action="{{ route('admin.ads.approve', $ad) }}" method="POST" class="d-inline">
                             @csrf
+                            @method('PUT')
                             <button type="submit" class="btn btn-success btn-sm w-100 mb-2">Approve</button>
                         </form>
                         <form action="{{ route('admin.ads.reject', $ad) }}" method="POST" class="d-inline">
                             @csrf
+                            @method('PUT')
                             <button type="submit" class="btn btn-danger btn-sm w-100">Reject</button>
                         </form>
                     @elseif($ad->status == 'active')
                         <form action="{{ route('admin.ads.pause', $ad) }}" method="POST" class="d-inline">
                             @csrf
+                            @method('PUT')
                             <button type="submit" class="btn btn-warning btn-sm w-100">Pause</button>
                         </form>
                     @elseif($ad->status == 'paused')
                         <form action="{{ route('admin.ads.approve', $ad) }}" method="POST" class="d-inline">
                             @csrf
+                            @method('PUT')
                             <button type="submit" class="btn btn-success btn-sm w-100">Resume</button>
                         </form>
                     @endif

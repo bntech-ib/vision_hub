@@ -4,11 +4,13 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
+use App\Providers\RouteServiceProvider;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         // Register custom service providers
         \App\Providers\RateLimiterServiceProvider::class,
+        RouteServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

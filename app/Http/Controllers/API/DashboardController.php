@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Advertisement;
-use App\Models\AdInteraction;
 use App\Models\Product;
 use App\Models\Course;
 use App\Models\BrainTeaser;
@@ -13,7 +12,6 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -103,7 +101,8 @@ class DashboardController extends Controller
                 'summary' => [
                     'normalEarnings' => (int)$user->getNormalEarnings(),
                     'referralEarnings' => (int)$user->getReferralEarnings(),
-                    'totalEarnings' => (int)$user->getTotalEarnings()
+                    'totalEarnings' => (int)$user->getTotalEarnings(),
+                    'todayEarnings' => (int)$user->getTodayEarnings()
                 ]
             ],
             'meta' => [

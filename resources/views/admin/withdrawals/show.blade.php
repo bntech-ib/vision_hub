@@ -12,6 +12,9 @@
             <p><strong>Account Details:</strong> <pre>{{ json_encode($withdrawal->payment_details, JSON_PRETTY_PRINT) }}</pre></p>
             <p><strong>Requested At:</strong> {{ $withdrawal->created_at }}</p>
             <p><strong>Processed At:</strong> {{ $withdrawal->processed_at ?? '-' }}</p>
+            @if($withdrawal->transaction_id)
+            <p><strong>Transaction ID:</strong> {{ $withdrawal->transaction_id }}</p>
+            @endif
             <p><strong>Notes:</strong> {{ $withdrawal->notes ?? '-' }}</p>
             <p><strong>Rejection Reason:</strong> {{ $withdrawal->rejection_reason ?? '-' }}</p>
         </div>

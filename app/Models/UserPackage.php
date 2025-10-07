@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class UserPackage extends Model
+class UserPackage extends Package
 {
     use HasFactory;
 
@@ -75,9 +75,13 @@ class UserPackage extends Model
      */
     public function calculateEarningPerAd(): float
     {
-        // If ad_limits is 0 or not set, return 0 to prevent division by zero
+        // If ad_limits is 0, it means unlimited interactions
+        // In this case, we should still calculate a reward based on a reasonable default
+        // or return a fixed small amount to encourage interaction
         if (!$this->ad_limits || $this->ad_limits == 0) {
-            return 0;
+            // For unlimited packages, we'll calculate based on a default of 1000 interactions
+            // This gives a reasonable reward while still allowing unlimited interactions
+            return $this->daily_earning_limit / 1000;
         }
         
         // Calculate earning per ad = daily earning limit / ad limits

@@ -135,8 +135,9 @@
             <textarea class="form-control" name="notes" id="approve_notes" rows="3"></textarea>
           </div>
           <div class="mb-3">
-            <label for="approve_transaction_id" class="form-label">Transaction ID</label>
+            <label for="approve_transaction_id" class="form-label">Transaction ID (Optional)</label>
             <input type="text" class="form-control" name="transaction_id" id="approve_transaction_id">
+            <div class="form-text">Enter transaction ID if available. If left blank, a system-generated ID will be used.</div>
           </div>
         </div>
         <div class="modal-footer">
