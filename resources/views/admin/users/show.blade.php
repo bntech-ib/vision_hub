@@ -52,7 +52,7 @@
                 </div>
                 <div class="card-body">
                     @php
-                        $bankDetails = $user->getAdminBankAccountDetails();
+                        $bankDetails = $user->getBankAccountDetails();
                     @endphp
                     
                     @if($bankDetails['has_bound_bank_account'])
@@ -69,7 +69,7 @@
                             </div>
                         </div>
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> Bank account details are encrypted for security and can only be updated by the user.
+                            <i class="fas fa-info-circle"></i> Bank account details are stored in plain text and can only be updated by the user.
                         </div>
                     @else
                         <div class="alert alert-warning">

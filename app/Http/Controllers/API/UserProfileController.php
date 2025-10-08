@@ -31,7 +31,7 @@ class UserProfileController extends Controller
         $referralEarnings = $user->getReferralEarningsByLevel();
         
         // Get bank account details directly from the user model
-        $bankAccountDetails = $user->getAdminBankAccountDetails();
+        $bankAccountDetails = $user->getBankAccountDetails();
         
         return response()->json([
             'success' => true,
@@ -124,7 +124,7 @@ class UserProfileController extends Controller
             $referralEarnings = $user->getReferralEarningsByLevel();
             
             // Get updated bank account details
-            $bankAccountDetails = $user->getAdminBankAccountDetails();
+            $bankAccountDetails = $user->getBankAccountDetails();
             
             return response()->json([
                 'success' => true,
@@ -210,7 +210,7 @@ class UserProfileController extends Controller
         $referralEarnings = $user->getReferralEarningsByLevel();
         
         // Get updated bank account details
-        $bankAccountDetails = $user->getAdminBankAccountDetails();
+        $bankAccountDetails = $user->getBankAccountDetails();
         
         return response()->json([
             'success' => true,
@@ -297,7 +297,7 @@ class UserProfileController extends Controller
         $referralEarnings = $user->getReferralEarningsByLevel();
         
         // Get bank account details
-        $bankAccountDetails = $user->getAdminBankAccountDetails();
+        $bankAccountDetails = $user->getBankAccountDetails();
         
         return response()->json([
             'success' => true,
@@ -394,7 +394,7 @@ class UserProfileController extends Controller
         $referralEarnings = $user->getReferralEarningsByLevel();
         
         // Get bank account details
-        $bankAccountDetails = $user->getAdminBankAccountDetails();
+        $bankAccountDetails = $user->getBankAccountDetails();
         
         return response()->json([
             'success' => true,

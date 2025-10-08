@@ -119,7 +119,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the decrypted bank account holder name.
+     * Get the bank account holder name.
      *
      * @return string|null
      */
@@ -130,7 +130,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the decrypted bank account number.
+     * Get the bank account number.
      *
      * @return string|null
      */
@@ -141,7 +141,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the decrypted bank name.
+     * Get the bank name.
      *
      * @return string|null
      */
@@ -152,7 +152,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the decrypted bank branch.
+     * Get the bank branch.
      *
      * @return string|null
      */
@@ -163,7 +163,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the decrypted bank routing number.
+     * Get the bank routing number.
      *
      * @return string|null
      */
@@ -174,12 +174,12 @@ class User extends Authenticatable
     }
     
     /**
-     * Get bank account details for admin display
-     * This method safely exposes decrypted bank account information for admin use
+     * Get bank account details for display
+     * This method exposes bank account information for user display
      *
      * @return array
      */
-    public function getAdminBankAccountDetails(): array
+    public function getBankAccountDetails(): array
     {
         return [
             'bank_account_holder_name' => $this->bank_account_holder_name,
@@ -190,6 +190,18 @@ class User extends Authenticatable
             'bank_account_bound_at' => $this->bank_account_bound_at,
             'has_bound_bank_account' => $this->hasBoundBankAccount(),
         ];
+    }
+    
+    /**
+     * Get bank account details for admin display
+     * This method exposes bank account information for admin use
+     *
+     * @return array
+     * @deprecated Use getBankAccountDetails() instead
+     */
+    public function getAdminBankAccountDetails(): array
+    {
+        return $this->getBankAccountDetails();
     }
     
     /**
@@ -993,13 +1005,13 @@ class User extends Authenticatable
             }
         }
 
-        // Encrypt sensitive bank account details before saving
+        // Store bank account details in plain text (no encryption)
         $this->forceFill([
-            'bank_account_holder_name' => Crypt::encryptString($bankDetails['bank_account_holder_name']),
-            'bank_account_number' => Crypt::encryptString($bankDetails['bank_account_number']),
-            'bank_name' => Crypt::encryptString($bankDetails['bank_name']),
-            'bank_branch' => !empty($bankDetails['bank_branch']) ? Crypt::encryptString($bankDetails['bank_branch']) : null,
-            'bank_routing_number' => !empty($bankDetails['bank_routing_number']) ? Crypt::encryptString($bankDetails['bank_routing_number']) : null,
+            'bank_account_holder_name' => $bankDetails['bank_account_holder_name'],
+            'bank_account_number' => $bankDetails['bank_account_number'],
+            'bank_name' => $bankDetails['bank_name'],
+            'bank_branch' => $bankDetails['bank_branch'] ?? null,
+            'bank_routing_number' => $bankDetails['bank_routing_number'] ?? null,
             'bank_account_bound_at' => now()
         ])->save();
 
