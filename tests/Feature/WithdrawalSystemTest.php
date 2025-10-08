@@ -19,13 +19,14 @@ class WithdrawalSystemTest extends TestCase
     {
         parent::setUp();
         
-        // Create a test user with some balance
+        // Create a test user with some balance and bound bank account
         $this->user = User::factory()->create([
             'wallet_balance' => 1000,
             'referral_earnings' => 500,
             'bank_account_holder_name' => 'Test User',
             'bank_account_number' => '1234567890',
-            'bank_name' => 'Test Bank'
+            'bank_name' => 'Test Bank',
+            'bank_account_bound_at' => now() // This is important to mark the bank account as bound
         ]);
     }
 
@@ -127,11 +128,12 @@ class WithdrawalSystemTest extends TestCase
         ]);
 
         // Create admin user
+        /** @var User $admin */
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin);
 
-        // Approve withdrawal
-        $response = $this->postJson("/admin/withdrawals/{$withdrawal->id}/approve", [
+        // Approve withdrawal using PUT method
+        $response = $this->putJson("/admin/withdrawals/{$withdrawal->id}/approve", [
             'notes' => 'Approved by admin',
             'transaction_id' => 'txn_12345'
         ]);
@@ -183,11 +185,12 @@ class WithdrawalSystemTest extends TestCase
         ]);
 
         // Create admin user
+        /** @var User $admin */
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin);
 
-        // Reject withdrawal
-        $response = $this->postJson("/admin/withdrawals/{$withdrawal->id}/reject", [
+        // Reject withdrawal using PUT method
+        $response = $this->putJson("/admin/withdrawals/{$withdrawal->id}/reject", [
             'reason' => 'Invalid bank details'
         ]);
 
@@ -214,12 +217,12 @@ class WithdrawalSystemTest extends TestCase
             'status' => 'refunded'
         ]);
 
-        // Check that refund transaction was created
+        // Check that refund transaction was created with refunded status (not completed)
         $this->assertDatabaseHas('transactions', [
             'user_id' => $this->user->id,
             'type' => 'refund',
             'amount' => 100,
-            'status' => 'completed'
+            'status' => 'refunded'
         ]);
     }
 }

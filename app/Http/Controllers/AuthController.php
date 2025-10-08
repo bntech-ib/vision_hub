@@ -166,15 +166,15 @@ class AuthController extends Controller
                         'totalCount' => $referralStats['total_count'],
                     ],
                     'referralEarnings' => [
-                        'level1Earnings' => (float)$referralEarnings['level1'],
-                        'level2Earnings' => (float)$referralEarnings['level2'],
-                        'level3Earnings' => (float)$referralEarnings['level3'],
-                        'totalEarnings' => (float)$referralEarnings['total'],
+                        'level1Earnings' => number_format((float)$referralEarnings['level1'], 2, '.', ''),
+                        'level2Earnings' => number_format((float)$referralEarnings['level2'], 2, '.', ''),
+                        'level3Earnings' => number_format((float)$referralEarnings['level3'], 2, '.', ''),
+                        'totalEarnings' => number_format((float)$referralEarnings['total'], 2, '.', ''),
                     ],
                     'earnings' => [
-                        'normalEarnings' => (float)$user->getNormalEarnings(),
-                        'referralEarnings' => (float)$user->getReferralEarnings(),
-                        'totalEarnings' => (float)$user->getTotalEarnings(),
+                        'normalEarnings' => number_format((float)$user->getNormalEarnings(), 2, '.', ''),
+                        'referralEarnings' => number_format((float)$user->getReferralEarnings(), 2, '.', ''),
+                        'totalEarnings' => number_format((float)$user->getTotalEarnings(), 2, '.', ''),
                     ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [
@@ -259,15 +259,15 @@ class AuthController extends Controller
                         'totalCount' => $referralStats['total_count'],
                     ],
                     'referralEarnings' => [
-                        'level1Earnings' => (float)$referralEarnings['level1'],
-                        'level2Earnings' => (float)$referralEarnings['level2'],
-                        'level3Earnings' => (float)$referralEarnings['level3'],
-                        'totalEarnings' => (float)$referralEarnings['total'],
+                        'level1Earnings' => number_format((float)$referralEarnings['level1'], 2, '.', ''),
+                        'level2Earnings' => number_format((float)$referralEarnings['level2'], 2, '.', ''),
+                        'level3Earnings' => number_format((float)$referralEarnings['level3'], 2, '.', ''),
+                        'totalEarnings' => number_format((float)$referralEarnings['total'], 2, '.', ''),
                     ],
                     'earnings' => [
-                        'normalEarnings' => (float)$user->getNormalEarnings(),
-                        'referralEarnings' => (float)$user->getReferralEarnings(),
-                        'totalEarnings' => (float)$user->getTotalEarnings(),
+                        'normalEarnings' => number_format((float)$user->getNormalEarnings(), 2, '.', ''),
+                        'referralEarnings' => number_format((float)$user->getReferralEarnings(), 2, '.', ''),
+                        'totalEarnings' => number_format((float)$user->getTotalEarnings(), 2, '.', ''),
                     ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [
@@ -349,15 +349,15 @@ class AuthController extends Controller
                         'totalCount' => $referralStats['total_count'],
                     ],
                     'referralEarnings' => [
-                        'level1Earnings' => (float)$referralEarnings['level1'],
-                        'level2Earnings' => (float)$referralEarnings['level2'],
-                        'level3Earnings' => (float)$referralEarnings['level3'],
-                        'totalEarnings' => (float)$referralEarnings['total'],
+                        'level1Earnings' => number_format((float)$referralEarnings['level1'], 2, '.', ''),
+                        'level2Earnings' => number_format((float)$referralEarnings['level2'], 2, '.', ''),
+                        'level3Earnings' => number_format((float)$referralEarnings['level3'], 2, '.', ''),
+                        'totalEarnings' => number_format((float)$referralEarnings['total'], 2, '.', ''),
                     ],
                     'earnings' => [
-                        'normalEarnings' => (float)$user->getNormalEarnings(),
-                        'referralEarnings' => (float)$user->getReferralEarnings(),
-                        'totalEarnings' => (float)$user->getTotalEarnings(),
+                        'normalEarnings' => number_format((float)$user->getNormalEarnings(), 2, '.', ''),
+                        'referralEarnings' => number_format((float)$user->getReferralEarnings(), 2, '.', ''),
+                        'totalEarnings' => number_format((float)$user->getTotalEarnings(), 2, '.', ''),
                     ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [
@@ -461,15 +461,15 @@ class AuthController extends Controller
                         'totalCount' => $referralStats['total_count'],
                     ],
                     'referralEarnings' => [
-                        'level1Earnings' => (float)$referralEarnings['level1'],
-                        'level2Earnings' => (float)$referralEarnings['level2'],
-                        'level3Earnings' => (float)$referralEarnings['level3'],
-                        'totalEarnings' => (float)$referralEarnings['total'],
+                        'level1Earnings' => number_format((float)$referralEarnings['level1'], 2, '.', ''),
+                        'level2Earnings' => number_format((float)$referralEarnings['level2'], 2, '.', ''),
+                        'level3Earnings' => number_format((float)$referralEarnings['level3'], 2, '.', ''),
+                        'totalEarnings' => number_format((float)$referralEarnings['total'], 2, '.', ''),
                     ],
                     'earnings' => [
-                        'normalEarnings' => (float)$user->getNormalEarnings(),
-                        'referralEarnings' => (float)$user->getReferralEarnings(),
-                        'totalEarnings' => (float)$user->getTotalEarnings(),
+                        'normalEarnings' => number_format((float)$user->getNormalEarnings(), 2, '.', ''),
+                        'referralEarnings' => number_format((float)$user->getReferralEarnings(), 2, '.', ''),
+                        'totalEarnings' => number_format((float)$user->getTotalEarnings(), 2, '.', ''),
                     ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [
@@ -548,15 +548,15 @@ class AuthController extends Controller
                         'totalCount' => $referralStats['total_count'],
                     ],
                     'referralEarnings' => [
-                        'level1Earnings' => (float)$referralEarnings['level1'],
-                        'level2Earnings' => (float)$referralEarnings['level2'],
-                        'level3Earnings' => (float)$referralEarnings['level3'],
-                        'totalEarnings' => (float)$referralEarnings['total'],
+                        'level1Earnings' => number_format((float)$referralEarnings['level1'], 2, '.', ''),
+                        'level2Earnings' => number_format((float)$referralEarnings['level2'], 2, '.', ''),
+                        'level3Earnings' => number_format((float)$referralEarnings['level3'], 2, '.', ''),
+                        'totalEarnings' => number_format((float)$referralEarnings['total'], 2, '.', ''),
                     ],
                     'earnings' => [
-                        'normalEarnings' => (float)$user->getNormalEarnings(),
-                        'referralEarnings' => (float)$user->getReferralEarnings(),
-                        'totalEarnings' => (float)$user->getTotalEarnings(),
+                        'normalEarnings' => number_format((float)$user->getNormalEarnings(), 2, '.', ''),
+                        'referralEarnings' => number_format((float)$user->getReferralEarnings(), 2, '.', ''),
+                        'totalEarnings' => number_format((float)$user->getTotalEarnings(), 2, '.', ''),
                     ],
                     'referrals' => $user->referrals->map(function ($referral) {
                         return [

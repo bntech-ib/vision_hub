@@ -42,9 +42,8 @@ class ReferralEarningsLevelTest extends TestCase
             'username' => 'newuser',
             'email' => 'newuser@example.com',
             'password' => 'password123',
-            'confirmPassword' => 'password123',
             'accessKey' => $accessKey->key,
-            'referrerCode' => 'REFERRER1'
+            'referralCode' => 'REFERRER1'
         ]);
 
         $response->assertStatus(201);
@@ -103,9 +102,9 @@ class ReferralEarningsLevelTest extends TestCase
             'username' => 'newuser',
             'email' => 'newuser@example.com',
             'password' => 'password123',
-            'confirmPassword' => 'password123',
+            
             'accessKey' => $accessKey1->key,
-            'referrerCode' => 'LEVEL1REFERRER'
+            'referralCode' => 'LEVEL1REFERRER'
         ]);
 
         $response->assertStatus(201);
@@ -175,9 +174,9 @@ class ReferralEarningsLevelTest extends TestCase
             'username' => 'newuser',
             'email' => 'newuser@example.com',
             'password' => 'password123',
-            'confirmPassword' => 'password123',
+            
             'accessKey' => $accessKey1->key,
-            'referrerCode' => 'LEVEL1REFERRER'
+            'referralCode' => 'LEVEL1REFERRER'
         ]);
 
         $response->assertStatus(201);

@@ -26,6 +26,7 @@ class AccessKey extends Model
     protected $casts = [
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
+        'is_used' => 'boolean',
         'usage_limit' => 'integer',
         'usage_count' => 'integer'
     ];

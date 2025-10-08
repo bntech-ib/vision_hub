@@ -61,9 +61,8 @@ Registers a new user in the system.
   "username": "johndoe",
   "email": "john@example.com",
   "password": "password123",
-  "confirmPassword": "password123",
-  "packageId": "1",
-  "referrerCode": "VH123456",
+  "accessKey": "VH123456-ABCD-EFGH-IJKL-MNOPQRSTUVWX",
+  "referralCode": "VH123456",
   "country": "Nigeria",
   "phone": "+2341234567890"
 }

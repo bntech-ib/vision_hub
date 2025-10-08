@@ -18,7 +18,9 @@ class WithdrawalRequest extends Model
         'payment_details',
         'status',
         'processed_at',
-        'admin_note'
+        'admin_note',
+        'notes',
+        'transaction_id'
     ];
 
     protected $casts = [

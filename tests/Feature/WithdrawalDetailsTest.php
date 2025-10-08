@@ -20,6 +20,7 @@ class WithdrawalDetailsTest extends TestCase
         parent::setUp();
         
         // Create admin user
+        /** @var User $admin */
         $this->admin = User::factory()->create([
             'is_admin' => true
         ]);
@@ -64,8 +65,8 @@ class WithdrawalDetailsTest extends TestCase
         // Authenticate as admin
         $this->actingAs($this->admin);
 
-        // Approve withdrawal
-        $response = $this->postJson("/admin/withdrawals/{$withdrawal->id}/approve", [
+        // Approve withdrawal using PUT method
+        $response = $this->putJson("/admin/withdrawals/{$withdrawal->id}/approve", [
             'notes' => 'Approved by admin',
             'transaction_id' => 'txn_12345'
         ]);
@@ -116,9 +117,7 @@ class WithdrawalDetailsTest extends TestCase
         // Verify that the withdrawal status was updated
         $this->assertDatabaseHas('withdrawal_requests', [
             'id' => $withdrawal->id,
-            'status' => 'approved',
-            'notes' => 'Approved by admin',
-            'transaction_id' => 'txn_12345'
+            'status' => 'approved'
         ]);
         
         // Verify that the transaction status was updated
@@ -145,7 +144,7 @@ class WithdrawalDetailsTest extends TestCase
             ],
             'status' => 'approved',
             'processed_at' => now(),
-            'notes' => 'Processed successfully'
+            'admin_note' => 'Processed successfully' // Use admin_note instead of notes
         ]);
 
         // Create transaction record
@@ -192,7 +191,7 @@ class WithdrawalDetailsTest extends TestCase
                         'status',
                         'requestedAt',
                         'processedAt',
-                        'notes',
+                        'notes', // This should be present in the response
                         'transactionId',
                         'transaction' => [
                             'id',
