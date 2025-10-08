@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
@@ -46,6 +47,7 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'country' => 'nullable|string|max:255',
             'referralCode' => 'nullable|string|exists:users,referral_code',
+            'referrerCode' => 'nullable|string|exists:users,referral_code',
             'accessKey' => 'required|string|exists:access_keys,key,is_used,0,is_active,1',
         ]);
 
@@ -62,9 +64,14 @@ class AuthController extends Controller
         }
 
         // Check if referral code exists and get the referring user
+        // Support both referralCode and referrerCode parameter names
+        $referralCode = $validated['referralCode'] ?? $validated['referrerCode'] ?? null;
         $referredBy = null;
-        if (!empty($validated['referralCode'])) {
-            $referredBy = User::where('referral_code', $validated['referralCode'])->first();
+        if (!empty($referralCode)) {
+            $referredBy = User::where('referral_code', $referralCode)->first();
+            
+            // Process referral regardless of user activity status
+            // Removed the isActive() check to simplify referral system
         }
 
         // Create user
@@ -84,14 +91,8 @@ class AuthController extends Controller
         // Award referral bonus to referring user (only for level 1 referrals)
         if ($referredBy) {
             // Calculate referral bonus based on the package that was applied to the new user
-            $baseLevel1Bonus = 100; // Default base bonus for level 1
-            $level1Bonus = $baseLevel1Bonus;
-            
-            // If the package has a referral earning percentage set, use that as the fixed amount
-            if ($accessKey->package && $accessKey->package->referral_earning_percentage > 0) {
-                $level1Bonus = (float) $accessKey->package->referral_earning_percentage;
-            }
-            
+            $level1Bonus = (float) $accessKey->package->referral_earning_percentage;
+           
             // Award direct referral bonus (Level 1) to referral earnings
             $referredBy->addToReferralEarnings($level1Bonus);
             
@@ -111,6 +112,9 @@ class AuthController extends Controller
                 'description' => 'Direct referral bonus for ' . $user->username,
                 'status' => 'completed',
             ]);
+            
+            // Refresh the referrer's data to ensure the latest referral earnings are used
+            $referredBy->refresh();
         }
 
         // Award welcome bonus from the package to new user
@@ -428,6 +432,9 @@ class AuthController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+        
+        // Refresh user data to ensure we have the latest referral earnings
+        $user->refresh();
         
         // Load relationships
         $user->load(['currentPackage', 'referrals', 'referredBy', 'projects', 'images']);
